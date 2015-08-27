@@ -32,7 +32,7 @@ class secqru_app_tiklan
         }
         
         // GLOBAL NETWORK ADDRESS
-        $g_lan = $this->w->get_dns( "g_lan:bridge name", "BroadLAN" );
+        $g_lan = $this->w->get_dns( "g_lan:bridge name", "TikLAN" );
 
         // GLOBAL PASSWORD SEED
         $g_psw = $this->w->get_dns( "g_psw:password seed", function(){ return substr( $this->w->rndhex( 8 ), 0, 16 ); } );
