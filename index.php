@@ -12,19 +12,37 @@
         ini_set( 'display_errors', TRUE );
         ini_set( 'display_startup_errors', TRUE );
         ini_set( "log_errors", 1 );
-        ini_set( "error_log", "./log/php_error.log" );
+        ini_set( "error_log", "./log/_error.log" );
         error_reporting( E_ALL );
     }
 
-    // BASIC SERIALIZATION BY IP
-    require( "include/secqru_flock.php" );
-    $ipblock = new secqru_flock( "./log/ip/{$_SERVER["REMOTE_ADDR"]}.lock" );
-    $ipblock->open();
+    if( defined( "SECQRU_DELAY" ) )
+    {
+        require( "include/secqru_flock.php" );
+
+        $ip_lock = new secqru_flock( "./log/ip/{$_SERVER["REMOTE_ADDR"]}.lock" );
+        if( !$ip_lock->open() )
+        {
+            header( "Status: 503 Service Temporarily Unavailable" );
+            header( "Retry-After: 10" );
+            exit( "503" );
+        }
+    }
 
     if( defined( "DEBUG" ) )
     {
+        require_once( "include/secqru_flock.php" );
+
+        $debug_line = date( "Y.m.d H:i:s | " ).str_pad( $_SERVER["REMOTE_ADDR"], 15 )." | ".$_SERVER['REQUEST_URI'].PHP_EOL;
+
         $debug_log = new secqru_flock( "./log/{$_SERVER["REMOTE_ADDR"]}.log" );
-        $debug_log->append( date("Y.m.d H:i:s | ").$_SERVER['REQUEST_URI'].PHP_EOL );
+        $debug_log->append( $debug_line );
+
+        $debug_log = new secqru_flock( "./log/_debug.log" );
+        $debug_log->append( $debug_line );
+
+        unset( $debug_line );
+        unset( $debug_log );
     }
 
     if( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] == "on" )

@@ -10,7 +10,7 @@ class secqru_worker
 
     public function log( $message, $level = 0 )
     {
-        if( defined( 'DEBUG' ) )
+        if( defined( 'DEBUG' ) && DEBUG )
         {
             $dbg = debug_backtrace();
             $log_string = " (";
