@@ -17,7 +17,7 @@
     }
 
     // BASIC SERIALIZATION BY IP
-    require( "include\secqru_flock.php" );
+    require( "include/secqru_flock.php" );
     $ipblock = new secqru_flock( "./log/ip/{$_SERVER["REMOTE_ADDR"]}.lock" );
     $ipblock->open();
 
@@ -32,7 +32,7 @@
     else
         define( "SECQRU_ADDR", "http://".$_SERVER["HTTP_HOST"].SECQRU_ROOT );
 
-    require( "include\secqru_worker.php" );
+    require( "include/secqru_worker.php" );
     $w = new secqru_worker();
 
     $app = $w->get_app( SECQRU_ROOT );
@@ -200,7 +200,7 @@ a
     color: #$color_link;
 }";
 
-    require( "include\secqru_html.php" );
+    require( "include/secqru_html.php" );
     $html = new secqru_html();
 
     // HEAD
@@ -256,7 +256,7 @@ a
 
     if( $app == "tiklan" )
     {
-        include "include\secqru_app_tiklan.php";
+        include "include/secqru_app_tiklan.php";
         $a = new secqru_app_tiklan( $w );
         $html->put( $a->html() );
     }
