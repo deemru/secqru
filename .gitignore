@@ -1,0 +1,8 @@
+# CONFIGS
+*.config.php
+
+# LOCKS
+*.lock
+
+# LOGS
+*.log
