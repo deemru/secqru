@@ -24,39 +24,39 @@ class secqru_app_tiklan
     function html()
     {
         // RESET
-        $g_reset = $this->w->get_set( "reset" );
+        $g_reset = $this->w->get_set( 'reset' );
         if( $g_reset )
         {
             unset( $_POST );
-            $this->w->log( "reset to defaults", 7 );
+            $this->w->log( 'reset to defaults', 7 );
         }
         
         // GLOBAL NETWORK ADDRESS
-        $g_lan = $this->w->get_dns( "g_lan:bridge name", "TikLAN" );
+        $g_lan = $this->w->get_dns( 'g_lan:bridge name', 'TikLAN' );
 
         // GLOBAL PASSWORD SEED
-        $g_psw = $this->w->get_dns( "g_psw:password seed", function(){ return substr( $this->w->rndhex( 8 ), 0, 16 ); } );
-        $g_seed = substr( sha1( $g_psw.__CLASS__ ), -8 );
+        $g_psw = $this->w->get_dns( 'g_psw:password seed', function(){ return $this->w->rndhex( 8 ); } );
+        $g_seed = substr( sha1( $g_psw.__CLASS__ ), -8 ).'_';
 
         // GLOBAL IP RANGE
-        $g_rng = $this->w->get_ip2long( "g_rng:broadcast domain", ip2long( "10.173.0.0" ) );
+        $g_rng = $this->w->get_ip2long( 'g_rng:broadcast domain', ip2long( '192.168.160.0' ) );
 
         // GLOBAL IP CIDR (MASK)
-        $g_cidr = $this->w->get_int( "g_cidr:broadcast cidr", 20, 16, 22 );
+        $g_cidr = $this->w->get_int( 'g_cidr:broadcast cidr', 20, 16, 22 );
 
         // SUBNET COUNTER INIT
         $temp = 0;
-        if( $this->w->get_set( "netadd" ) )
+        if( $this->w->get_set( 'netadd' ) )
         {
             $temp++;
-            $this->w->log( "routers++", 7 );
+            $this->w->log( 'routers++', 7 );
         }
-        if( $this->w->get_set( "netsub" ) )
+        if( $this->w->get_set( 'netsub' ) )
         {
             $temp--;
-            $this->w->log( "routers--", 7 );
+            $this->w->log( 'routers--', 7 );
         }
-        $subnum = $this->w->get_int( "subnum:router count", 3, 2, 64, $temp );
+        $subnum = $this->w->get_int( 'subnum:router count', 3, 2, 64, $temp );
 
         // SUBNET COUNTER CORRECTION BY CIDR (MASK)
         $temp = floor( self::ipv4_neg( $g_cidr ) / 256 );
@@ -72,23 +72,30 @@ class secqru_app_tiklan
         $g_horizon = abs( $g_rng % 99 ) + 1;
 
         // GLOBAL RANGE CHANGED?
-        if( $g_rng == $this->w->get_ip2long( "g_rw:global range", false ) )
+        if( !$this->w->get_set( 'g_rw' ) ||
+            $g_rng == $this->w->get_ip2long( 'g_rw:global range', false ) )
             $g_changed = false;
         else
         {
             $g_changed = true;
+
             for( $i = 1; $i <= $subnum; $i++ )
                 $this->w->clear( "subnet$i" );
+            $this->w->clear( 'g_eoip' );
         }
 
+        // GLOBAL EOIP TUNNEL ID SEED
+        $g_eoip = $g_rng >> 8 & 0xFFFF;
+        $g_eoip = $this->w->get_int( 'g_eoip:tunnel id seed', $g_eoip, 0, 62000 );
+
         // GLOBAL VPN
-        $g_vpn = $this->w->get_dns( "g_vpn:VPN protocol", "L2TP" );
-        $vpn_protocols = array( "L2TP" => "l2tp", "PPTP" => "pptp",
-                                "SSTP" => "sstp", "OVPN" => "ovpn" );
+        $g_vpn = $this->w->get_dns( 'g_vpn:VPN protocol', 'L2TP' );
+        $vpn_protocols = array( 'L2TP' => 'l2tp', 'PPTP' => 'pptp',
+                                'SSTP' => 'sstp', 'OVPN' => 'ovpn' );
         if( !array_key_exists( $g_vpn, $vpn_protocols ) )
         {
-            $g_vpn = "L2TP";
-            $this->w->ezlog( "default", "VPN protocol", $g_vpn, 1 );
+            $g_vpn = 'L2TP';
+            $this->w->ezlog( 'default', 'VPN protocol', $g_vpn, 1 );
         }
 
         // SUBNET PARAMETERS CYCLE
@@ -96,10 +103,10 @@ class secqru_app_tiklan
         for( $i = 0; $i <= $subnum; $i++ )
         {
             // SUBNET NAME
-            $subnets[$i]['name'] = $this->w->get_dns( "name$i:router name $i", sprintf( "Tik-%02d", $i ) );
+            $subnets[$i]['name'] = $this->w->get_dns( "name$i:router name $i", sprintf( 'Tik-%02d', $i ) );
 
             // SUBNET PUBLIC ADDRESS or DNS
-            $subnets[$i]['pub'] = $this->w->get_dns( "pub$i:public address $i", sprintf( "%s.sn.mynetname.net", $subnets[$i]['name'] ) );
+            $subnets[$i]['pub'] = $this->w->get_dns( "pub$i:public address $i", sprintf( '%s.sn.mynetname.net', $subnets[$i]['name'] ) );
 
             // SUBNET is PUBLIC?
             $subnets[$i]['is_pub'] = $this->w->get_int( "is_pub$i:public status $i", $i == 1 ? true : false );
@@ -107,13 +114,13 @@ class secqru_app_tiklan
             // SUBNET PUBLIC SWITCH
             switch( $this->w->get_dns( "sw_pub$i:public address switcher $i", false ) )
             {
-                case "v":
+                case 'v':
                     $subnets[$i]['is_pub'] = true;
-                    $this->w->ezlog( "switch", $subnets[$i]['name'], "public address", 7 );
+                    $this->w->ezlog( 'switch', $subnets[$i]['name'], 'public address', 7 );
                     break;
-                case "x":
+                case 'x':
                     $subnets[$i]['is_pub'] = false;
-                    $this->w->ezlog( "switch", $subnets[$i]['name'], "no public address", 7 );
+                    $this->w->ezlog( 'switch', $subnets[$i]['name'], 'no public address', 7 );
                     break;
             }
 
@@ -139,17 +146,25 @@ class secqru_app_tiklan
             $subnets[$i]['addr_dhcp_last'] = long2ip( $subnets[$i]['subnet_end'] );
             $subnets[$i]['dhcp_pool_name'] = "$g_lan ({$subnets[$i]['name']}) Pool";
             $subnets[$i]['dhcp_server_name'] = "$g_lan ({$subnets[$i]['name']}) DHCP";
-            $subnets[$i]['psw'] = $g_seed."_".substr( sha1( $g_seed.__CLASS__.$subnets[$i]['name'] ), -8 );
+            $subnets[$i]['psw'] = $g_seed . substr( sha1( $g_seed.$subnets[$i]['name'] ), -8 );
+        }
+
+        // TUNNEL ID CALC
+        $temp = $g_eoip;
+        for( $i = 1; $i <= $subnum; $i++ )
+        {
+            $subnets[$i]['eoip_mark'] = $temp + $i;
+            $temp += $subnum - $i - 2;
         }
 
         // NEW STATION SELECTED?
-        $g_sel = $this->w->get_int( "g_sel:selected station", 0 );
-        $subnets[0]['name'] = "...".str_repeat( "&nbsp;", self::formsize - 3 );
+        $g_sel = $this->w->get_int( 'g_sel:selected station', 0 );
+        $subnets[0]['name'] = '...'.str_repeat( '&nbsp;', self::formsize - 3 );
 
         if( $g_sel != 0 && $g_sel > $subnum )
         {
             $g_sel = 0;
-            $this->w->log( "new router out of range", 1 );
+            $this->w->log( 'new router out of range', 1 );
         }
 
         // CHECK PUBLICS AT LEAST 1
@@ -164,7 +179,7 @@ class secqru_app_tiklan
         }
 
         if( $nopublic )
-            $this->w->log( "no public addresses", 2 );
+            $this->w->log( 'no public addresses', 2 );
 
         // CHECK NAMES NOT EQUAL
         for( $i = 1; $i <= $subnum; $i++ )
@@ -178,7 +193,7 @@ class secqru_app_tiklan
                 {
                     $subnets[$i]['name_ok'] = false;
                     $subnets[$s]['name_ok'] = false;
-                    $this->w->log( "router names $i and $s are equal \"".$subnets[$i]['name']."\"", 2 );
+                    $this->w->log( "router names $i and $s are equal \"{$subnets[$i]['name']}\"", 2 );
                     break;
                 }
             }
@@ -197,7 +212,7 @@ class secqru_app_tiklan
                 {
                     $subnets[$i]['pub_ok'] = false;
                     $subnets[$s]['pub_ok'] = false;
-                    $this->w->log( "public addresses $i and $s are equal \"".$subnets[$i]['pub']."\"", 2 );
+                    $this->w->log( "public addresses $i and $s are equal \"{$subnets[$i]['pub']}\"", 2 );
                     break;
                 }
             }
@@ -232,14 +247,14 @@ class secqru_app_tiklan
         }
 
         $html_select = new secqru_html();
-        $html_select->open_select( "g_sel" );
+        $html_select->open_select( 'g_sel' );
 
         // SELECTED STATION
         for( $i = 0; $i <= $subnum; $i++ )
         {
             $temp = $subnets[$i]['name'];
             if( $i && strlen( $temp ) > self::formsize )
-                $temp = substr( $temp, 0, self::formsize - 3 )."..." ;
+                $temp = substr( $temp, 0, self::formsize - 3 ).'...' ;
 
             $html_select->put_option( $i, $temp, $g_sel == $i );
         }
@@ -247,17 +262,17 @@ class secqru_app_tiklan
         $html_select->close();
 
         $html_vpn = new secqru_html();
-        $html_vpn->open_select( "g_vpn" );
+        $html_vpn->open_select( 'g_vpn' );
 
         foreach( $vpn_protocols as $key => $val )
             $html_vpn->put_option( $key, $key, $g_vpn == $key );
 
         $html_vpn->close();
 
-        $actionlog = "";
+        $actionlog = '';
         $actionlog .= $this->w->log;
 
-        define("NEWLINER", "<br>".PHP_EOL );
+        define('NEWLINER', '<br>'.PHP_EOL );
 
         // DISPLAY HELP / RESET/ LOG
         if( isset( $_POST['help'] ) )
@@ -278,55 +293,58 @@ class secqru_app_tiklan
                 $actionlog .= '# WARNING: ranges changed'.NEWLINER;
             if( isset( $_POST['save'] ) )
                 $actionlog .= '# SUCCESS: configuration saved'.NEWLINER;
-            if( $actionlog == "" )
-                $actionlog = "# UNKNOWN";
+            if( $actionlog == '' )
+                $actionlog = '# UNKNOWN';
         }
 
         $html_setup = new secqru_html();
 
-        $html_setup->put("<hr>");
-        $html_setup->open('table');
-        $html_setup->open("tr");
+        $html_setup->put( '<hr>' );
+        $html_setup->open( 'table' );
+        $html_setup->open( 'tr' );
         {
-            $html_setup->open("td", ' valign="top" align="left"');
-            $html_setup->open("div");
+            $html_setup->open( 'td', ' valign="top" align="left"' );
+            $html_setup->open( 'div');
 
-            $html_setup->put_input( "g_lan", self::formsize, 50, $g_lan, "bridge name" );
-            $html_setup->add( " — bridge name", 1 );
+            $html_setup->put_input( 'g_lan', self::formsize, 50, $g_lan, 'bridge name' );
+            $html_setup->add( ' — bridge name', 1 );
 
-            $html_setup->put_input_hidden( "g_rw", long2ip( $g_rng ) );
-            $html_setup->put_input( "g_rng", 15, 15, long2ip( $g_rng ), false );
-            $html_setup->add( " / " );
-            $html_setup->put_input( "g_cidr", 2, 2, $g_cidr, false );
-            $html_setup->add( " — broadcast domain", 1 );
+            $html_setup->put_input_hidden( 'g_rw', long2ip( $g_rng ) );
+            $html_setup->put_input( 'g_rng', 15, 15, long2ip( $g_rng ), false );
+            $html_setup->add( ' / ' );
+            $html_setup->put_input( 'g_cidr', 2, 2, $g_cidr, false );
+            $html_setup->add( ' — broadcast domain', 1 );
 
-            $html_setup->put_input( "subnum", 2, 2, $subnum );
-            $html_setup->put_submit( "netadd", "+" );
-            $html_setup->put_submit( "netsub", "-" );
-            $html_setup->add( " — router count", 1 );
+            $html_setup->put_input( 'subnum', 2, 2, $subnum );
+            $html_setup->put_submit( 'netadd', '+' );
+            $html_setup->put_submit( 'netsub', '-' );
+            $html_setup->add( ' — router count', 1 );
 
             $html_setup->put( $html_vpn );
-            $html_setup->put_submit( "save", "v" );
-            $html_setup->add( " — VPN protocol", 1 );
+            $html_setup->put_submit( 'save', 'v' );
+            $html_setup->add( ' — VPN protocol', 1 );
 
-            $html_setup->put_input_ro( self::formsize, long2ip( $g_rng + 1 )." — ".long2ip( $g_rng_end ) );
-            $html_setup->add( " — address pool", 1 );
+            $html_setup->put_input( 'g_eoip', 5, 5, $g_eoip );
+            $html_setup->add( ' — tunnel id seed', 1 );
 
-            $html_setup->put_input_ro( self::formsize, long2ip( $subnets[0]['subnet'] + 1 )." — ".long2ip( $subnets[0]['subnet_end'] ) );
-            $html_setup->add( " — VPN pool", 1 );
+            $html_setup->put_input_ro( self::formsize, long2ip( $g_rng + 1 ).' — '.long2ip( $g_rng_end ) );
+            $html_setup->add( ' — address pool', 1 );
 
-            $html_setup->put_input( "g_psw", self::formsize, 50, $g_psw );
-            $html_setup->add( " — password seed", 1 );
+            $html_setup->put_input_ro( self::formsize, long2ip( $subnets[0]['subnet'] + 1 ).' — '.long2ip( $subnets[0]['subnet_end'] ) );
+            $html_setup->add( ' — VPN pool', 1 );
+
+            $html_setup->put_input( 'g_psw', self::formsize, 50, $g_psw );
+            $html_setup->add( ' — password seed', 1 );
 
             $html_setup->put( $html_select );
-            $html_setup->put_submit( "save", "v" );
-            $html_setup->add( " — new router" );
+            $html_setup->put_submit( 'save', 'v' );
+            $html_setup->add( ' — new router' );
             $html_setup->close();
             $html_setup->close();
         }
         {
-            $html_setup->open("td", ' valign="top" align="right"');
-            $html_setup->open("div", " class=\"textarea\"");
+            $html_setup->open( 'td', ' valign="top" align="right"' );
+            $html_setup->open( 'div', ' class="textarea"' );
             $html_setup->add( $actionlog );
             $html_setup->close();
             $html_setup->close();
@@ -336,40 +354,40 @@ class secqru_app_tiklan
         // SUBNET PARAMETERS
         for( $i = 1; $i <= $subnum; $i++ )
         {
-            $html_setup->open("tr");
-            $html_setup->open("td", ' colspan="2"');
-            $html_setup->put("<hr>");
+            $html_setup->open( 'tr' );
+            $html_setup->open( 'td', ' colspan="2"' );
+            $html_setup->put( '<hr>' );
             $html_setup->close();
             $html_setup->close();
 
-            $html_setup->open("tr");
-            $html_setup->open("td", ' valign="top"');
-            $html_setup->open("div");
+            $html_setup->open( 'tr');
+            $html_setup->open( 'td', ' valign="top"' );
+            $html_setup->open( 'div' );
             {
-                $html_setup->input_full( "text", "name$i", self::formsize, 50, $subnets[$i]['name'], $subnets[$i]['name_ok'] ? "" : "e" );
-                $html_setup->add( " — router name", 1 );
+                $html_setup->input_full( 'text', "name$i", self::formsize, 50, $subnets[$i]['name'], $subnets[$i]['name_ok'] ? '' : 'e' );
+                $html_setup->add( ' — router name', 1 );
 
-                $html_setup->put_input_hidden( "is_pub$i", $subnets[$i]['is_pub'] ? "1" : "0" );
-                $html_setup->input_full( "text", "pub$i", self::formsize, 50, $subnets[$i]['pub'], $subnets[$i]['is_pub'] ? ( $subnets[$i]['pub_ok'] ? "" : "e" ) : "r" );
-                $html_setup->put_submit( "sw_pub$i", $subnets[$i]['is_pub'] ? "x" : "v" );
-                $html_setup->add( " — public address", 1 );
+                $html_setup->put_input_hidden( "is_pub$i", $subnets[$i]['is_pub'] ? '1' : '0' );
+                $html_setup->input_full( 'text', "pub$i", self::formsize, 50, $subnets[$i]['pub'], $subnets[$i]['is_pub'] ? ( $subnets[$i]['pub_ok'] ? '' : 'e' ) : 'r' );
+                $html_setup->put_submit( "sw_pub$i", $subnets[$i]['is_pub'] ? 'x' : 'v' );
+                $html_setup->add( ' — public address', 1 );
 
                 $html_setup->put_input( "dist$i", 3, 3, $subnets[$i]['dist'] );
-                $html_setup->add( " — router distance", 1 );
+                $html_setup->add( ' — router distance', 1 );
 
-                $html_setup->input_full( "text", "subnet$i", 15, 15, long2ip( $subnets[$i]['subnet'] ), $subnets[$i]['subnet_ok'] ? "" : "e" );
-                $html_setup->add( " / " );
-                $html_setup->input_full( "text", 0, 2, 0, $subnets[$i]['subnet_cidr'], "r", 0 );
-                $html_setup->add( " — local range", 1 );
+                $html_setup->input_full( 'text', "subnet$i", 15, 15, long2ip( $subnets[$i]['subnet'] ), $subnets[$i]['subnet_ok'] ? '' : 'e' );
+                $html_setup->add( ' / ' );
+                $html_setup->input_full( 'text', 0, 2, 0, $subnets[$i]['subnet_cidr'], 'r', 0 );
+                $html_setup->add( ' — local range', 1 );
 
-                $html_setup->input_full( "text", 0, 15, 0, $subnets[$i]['addr_gw'], "r" );
-                $html_setup->add( " — LAN address", 1 );
+                $html_setup->input_full( 'text', 0, 15, 0, $subnets[$i]['addr_gw'], 'r' );
+                $html_setup->add( ' — LAN address', 1 );
 
-                $html_setup->input_full( "text", 0, 15, 0, $subnets[$i]['addr_vpn'], "r" );
-                $html_setup->add( " — VPN address", 1 );
+                $html_setup->input_full( 'text', 0, 15, 0, $subnets[$i]['addr_vpn'], 'r' );
+                $html_setup->add( ' — VPN address', 1 );
 
-                $html_setup->input_full( "text", 0, self::formsize, 0, "{$subnets[$i]['addr_dhcp_first']} - {$subnets[$i]['addr_dhcp_last']}", "r" );
-                $html_setup->add( " — DHCP pool", 1 );
+                $html_setup->input_full( 'text', 0, self::formsize, 0, "{$subnets[$i]['addr_dhcp_first']} - {$subnets[$i]['addr_dhcp_last']}", 'r' );
+                $html_setup->add( ' — DHCP pool', 1 );
             }
             $html_setup->close();
             $html_setup->close();
@@ -384,7 +402,7 @@ class secqru_app_tiklan
                 $html_config->put( "interface bridge add name=\"$g_lan\"", 1 );
                 $html_config->put( "ip address add address={$subnets[$i]['addr_gw']}/$g_cidr interface=\"$g_lan\"", 1 );
                 $html_config->put( "ip route add dst-address={$subnets[0]['addr_subnet']}/24 type=unreachable distance=250", 1 );
-                $html_config->put ( "", 1 );
+                $html_config->put ( '', 1 );
 
                 // DHCP
                 $html_config->put( "# DHCP ({$subnets[$i]['name']})", 1 );
@@ -392,12 +410,12 @@ class secqru_app_tiklan
                 $html_config->put( "ip dhcp-server network add address={$subnets[$i]['addr_subnet']}/{$subnets[$i]['subnet_cidr']} gateway={$subnets[$i]['addr_gw']} dns-server={$subnets[$i]['addr_gw']}", 1 );
                 $html_config->put( "ip dhcp-server add name=\"{$subnets[$i]['dhcp_server_name']}\" interface=\"$g_lan\" address-pool=\"{$subnets[$i]['dhcp_pool_name']}\"", 1 );
                 $html_config->put( "ip dhcp-server enable \"{$subnets[$i]['dhcp_server_name']}\"", 1 );
-                $html_config->put ( "", 1 );
+                $html_config->put ( '', 1 );
             }
 
             // PPP PROFILE ADD
-            $ppp_profile_name = "default-encryption";
-            $ppp_timeout = "17";
+            $ppp_profile_name = 'default-encryption';
+            $ppp_timeout = '17';
 
             // PPP SECRET ADD
             $ppp_users = array();
@@ -439,13 +457,13 @@ class secqru_app_tiklan
                     {
                         $ppp_client_name = "$g_lan-$g_vpn-Client-{$subnets[$s]['name']}";
                         $ppp_routes[] = "ip route add dst-address={$subnets[0]['addr_subnet']}/24 gateway=$ppp_client_name distance={$subnets[$s]['dist']}";
-                        $ppp_clients[] = "interface {$vpn_protocols[$g_vpn]}-client add connect-to=\"{$subnets[$s]['pub']}\" name=\"$ppp_client_name\" user=\"{$subnets[$i]['name']}\" password=\"{$subnets[$i]['psw']}\" profile=\"$ppp_profile_name\" keepalive-timeout=$ppp_timeout";
+                        $ppp_clients[] = "interface {$vpn_protocols[$g_vpn]}-client add connect-to=\"{$subnets[$s]['pub']}\" name=\"$ppp_client_name\" user=\"$g_lan-{$subnets[$i]['name']}\" password=\"{$subnets[$i]['psw']}\" profile=\"$ppp_profile_name\" keepalive-timeout=$ppp_timeout";
                     }
                     else if( $is_server )
                     {
                         $ppp_server_name = "$g_lan-$g_vpn-Server-{$subnets[$s]['name']}";
-                        $ppp_users[] = "ppp secret add name=\"{$subnets[$s]['name']}\" password=\"{$subnets[$s]['psw']}\" profile=\"$ppp_profile_name\" local-address={$subnets[$i]['addr_vpn']} remote-address={$subnets[$s]['addr_vpn']} routes=\"{$subnets[0]['addr_subnet']}/24 {$subnets[$s]['addr_vpn']} {$subnets[$s]['dist']}\"";
-                        $ppp_servers[] = "interface {$vpn_protocols[$g_vpn]}-server add name=\"$ppp_server_name\" user=\"{$subnets[$s]['name']}\"";
+                        $ppp_users[] = "ppp secret add name=\"$g_lan-{$subnets[$s]['name']}\" password=\"{$subnets[$s]['psw']}\" profile=\"$ppp_profile_name\" local-address={$subnets[$i]['addr_vpn']} remote-address={$subnets[$s]['addr_vpn']} routes=\"{$subnets[0]['addr_subnet']}/24 {$subnets[$s]['addr_vpn']} {$subnets[$s]['dist']}\"";
+                        $ppp_servers[] = "interface {$vpn_protocols[$g_vpn]}-server add name=\"$ppp_server_name\" user=\"$g_lan-{$subnets[$s]['name']}\"";
                     }
                 }
             }
@@ -456,7 +474,7 @@ class secqru_app_tiklan
                 $html_config->put( "# PPP Server ({$subnets[$i]['name']})", 1 );
                 $html_config->put( $ppp_users, 1 );
                 $html_config->put( $ppp_servers, 1 );
-                $html_config->put ( "", 1 );
+                $html_config->put ( '', 1 );
             }
 
             // PPP Client
@@ -465,19 +483,19 @@ class secqru_app_tiklan
                 $html_config->put( "# PPP Client ({$subnets[$i]['name']})", 1 );
                 $html_config->put( $ppp_clients, 1 );
                 $html_config->put( $ppp_routes, 1 );
-                $html_config->put ( "", 1 );
+                $html_config->put ( '', 1 );
             }
 
             // EOIP ADD
             $eoip_interface = array();
-            $eoip_to_bridge = "";
-            $eoip_bridge_filter = "";
+            $eoip_to_bridge = '';
+            $eoip_bridge_filter = '';
             for( $s = 1; $s <= $subnum; $s++ )
             {
                 if( $i != $s && ( !$g_sel || ( $g_sel && $g_sel == $s ) || ( $g_sel && $g_sel == $i ) ) )
                 {
                     $eoip_name = "$g_lan-EoIP-{$subnets[$s]['name']}";
-                    $eoip_tunnel_id = min($subnets[$i]['addr_id'],$subnets[$s]['addr_id'])*256 + max($subnets[$i]['addr_id'],$subnets[$s]['addr_id']);
+                    $eoip_tunnel_id = $subnets[ min( $i, $s ) ]['eoip_mark'] + max( $i, $s ) - 2;
 
                     $eoip_interface[] = "interface eoip add name=\"$eoip_name\" remote-address={$subnets[$s]['addr_vpn']} tunnel-id=$eoip_tunnel_id";
                     $eoip_to_bridge[] = "interface bridge port add bridge=\"$g_lan\" interface=\"$eoip_name\" horizon=$g_horizon";
@@ -487,17 +505,17 @@ class secqru_app_tiklan
 
             $html_config->put( "# EoIP ({$subnets[$i]['name']})", 1 );
             $html_config->put( $eoip_interface, 1 );
-            $html_config->put( "", 1 );
+            $html_config->put( '', 1 );
             
             $html_config->put( "# EoIP to Bridge ({$subnets[$i]['name']})", 1 );
             $html_config->put( $eoip_to_bridge, 1 );
-            $html_config->put ( "", 1 );
+            $html_config->put ( '', 1 );
             
             $html_config->put( "# EoIP filter DHCP ({$subnets[$i]['name']})", 1 );
             $html_config->put( $eoip_bridge_filter, 1 );
 
-            $html_setup->open("td", ' valign="top" align="right"');
-            $html_setup->open("div", " class=\"textarea\"");
+            $html_setup->open( 'td', ' valign="top" align="right"' );
+            $html_setup->open( 'div', ' class="textarea"' );
             {
                 $html_setup->put( $html_config );
             }
