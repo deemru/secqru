@@ -22,7 +22,7 @@ class secqru_flock
         self::close();
     }
 
-    function open( $access = "a+" )
+    function open( $access = 'a+' )
     {
         self::close();
 
@@ -59,7 +59,7 @@ class secqru_flock
     {
         self::close();
 
-        if( !self::open( "a+" ) )
+        if( !self::open( 'a+' ) )
             return 0;
 
         fwrite( $this->fp, $data );

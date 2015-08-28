@@ -16,7 +16,7 @@ class secqru_cryptex
         $this->ivsz = $ivsz;
         $this->macsz = $macsz;
         $this->cbcsz = $cbcsz;
-        $this->ipmix = $mix ? $_SERVER['REMOTE_ADDR'] : "";
+        $this->ipmix = $mix ? $_SERVER['REMOTE_ADDR'] : '';
     }
 
     public function rnd( $size = 8, $rndsz = 1 )
@@ -25,7 +25,7 @@ class secqru_cryptex
         for( $i = 0; $i < $size; $i++ )
         {
             if( ( $i % $rndsz ) == 0 ) 
-                $rseed = pack( "I", mt_rand() );
+                $rseed = pack( 'I', mt_rand() );
 
             if( $i == 0 )
                 $rnd = $rseed[ $i % $rndsz ];
@@ -70,9 +70,9 @@ class secqru_cryptex
     public function cryptex( $data )
     {
         $data = gzdeflate( $data, 9 );
-        $iv = $this->ivsz ? self::rnd( $this->ivsz, 2 ) : ""; // inner iv
+        $iv = $this->ivsz ? self::rnd( $this->ivsz, 2 ) : ''; // inner iv
         $data = $iv . $data;
-        $iv = $this->ivsz ? self::rnd( $this->ivsz, 2 ) : ""; // outer iv
+        $iv = $this->ivsz ? self::rnd( $this->ivsz, 2 ) : ''; // outer iv
         $key = self::key( $iv );
         $mac = substr( self::hash( $key . $data ), -$this->macsz );
         $data = self::cbc( $iv . $mac, $key, $data, TRUE );

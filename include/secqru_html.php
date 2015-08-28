@@ -7,7 +7,7 @@ class secqru_html
     private $lvl = 0;
 
     const EOL = PHP_EOL;
-    const TAB = "    ";
+    const TAB = '    ';
 
     public function render()
     {
@@ -32,7 +32,7 @@ class secqru_html
         return $rows;
     }
 
-    public function open( $tag, $options = "" )
+    public function open( $tag, $options = '' )
     {
         $this->html[] = array( $this->lvl, "<$tag$options>" );
         $this->tags[$this->lvl] = $tag;
@@ -41,12 +41,12 @@ class secqru_html
 
     public function open_select( $id )
     {
-        self::open( "select", " name=\"$id\"" );
+        self::open( 'select', " name=\"$id\"" );
     }
 
     public function put_option( $id, $text, $selected )
     {
-        $selected = $selected ? " selected" : "";
+        $selected = $selected ? ' selected' : '';
         self::put( "<option value=\"$id\"$selected>$text</option>" );
     }
 
@@ -54,17 +54,17 @@ class secqru_html
     {
         switch( $style )
         {
-            case "r":
+            case 'r':
                 $style = ' class="ro" readonly'; break;
-            case "e":
+            case 'e':
                 $style = ' class="red"'; break;
             default:
-                $style = $style ? $style : "";
+                $style = $style ? $style : '';
         }
 
-        $name = $name ? " name=\"$name\"" : "";
-        $size = $size ? " size=\"$size\"" : "";
-        $max = $max ? " maxlength=\"$max\"" : "";
+        $name = $name ? " name=\"$name\"" : '';
+        $size = $size ? " size=\"$size\"" : '';
+        $max = $max ? " maxlength=\"$max\"" : '';
 
         $value = "<input type=\"$type\"$name$size$max value=\"$value\"$style>";
 
@@ -92,17 +92,17 @@ class secqru_html
 
     public function put_input( $name, $size, $max, $value, $is_put = true )
     {
-        self::input_full( "text", $name, $size, $max, $value, "", $is_put );
+        self::input_full( 'text', $name, $size, $max, $value, '', $is_put );
     }
 
     public function put_input_ro( $size, $value, $is_put = true )
     {
-        self::input_full( "text", false, $size, false, $value, "r", $is_put );
+        self::input_full( 'text', false, $size, false, $value, 'r', $is_put );
     }
 
     public function put( $value, $br = false )
     {
-        $br = $br ? "<br>" : "";
+        $br = $br ? '<br>' : '';
 
         if( isset( $value->html ) )
         {
@@ -119,7 +119,7 @@ class secqru_html
 
     public function add( $value, $br = false )
     {
-        $br = $br ? "<br>" : "";
+        $br = $br ? '<br>' : '';
 
         $this->html[ sizeof( $this->html ) - 1 ][1] .= $value.$br;
     }

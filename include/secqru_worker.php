@@ -2,7 +2,7 @@
 
 class secqru_worker
 {
-    public $log = "";
+    public $log = '';
 
     public function ezlog( $message, $print, $value, $level = 0 ) {
         return self::log( "$message \"$print\" = \"$value\"", $level );
@@ -13,28 +13,28 @@ class secqru_worker
         if( defined( 'DEBUG' ) && DEBUG )
         {
             $dbg = debug_backtrace();
-            $log_string = " (";
+            $log_string = ' (';
             for( $i = 0; $i < sizeof( $dbg ); $i++ )
             {
                 if( $i > 0 )
-                    $log_string .= " > ";
-                $file = substr( $dbg[$i]['file'], strrpos( $dbg[$i]['file'], "\\" ) + 1 );
-                $log_string .= $file.":".$dbg[$i]['line'];
+                    $log_string .= ' > ';
+                $file = substr( $dbg[$i]['file'], strrpos( $dbg[$i]['file'], '\\' ) + 1 );
+                $log_string .= $file.':'.$dbg[$i]['line'];
             }
-            $log_string .= ")";
+            $log_string .= ')';
         }
         else
         {
-            $log_string = "";
+            $log_string = '';
         }
 
         switch( $level )
         {
-            case 0: $level = "#   DEBUG: "; break;
-            case 1: $level = "# WARNING: "; break;
-            case 2: $level = "#   ERROR: "; break;
-            case 3: $level = "# CRITICAL: "; break;
-            case 7: $level = "# SUCCESS: "; break;
+            case 0: $level = '#   DEBUG: '; break;
+            case 1: $level = '# WARNING: '; break;
+            case 2: $level = '#   ERROR: '; break;
+            case 3: $level = '# CRITICAL: '; break;
+            case 7: $level = '# SUCCESS: '; break;
             default:
                 exit( "# CRITICAL: unknown level == $level".$log_string.PHP_EOL );
         }
@@ -46,28 +46,28 @@ class secqru_worker
 
     private function get_cryptex( $password )
     {
-        require_once( "secqru_cryptex.php" );
+        require_once( 'secqru_cryptex.php' );
         return new secqru_cryptex( $password );
     }
 
     function get_app( $root )
     {
-        $data = $_SERVER["REQUEST_URI"];
+        $data = $_SERVER['REQUEST_URI'];
         $data = substr( $data, strlen( $root ) );
 
-        if( $data && ( $pos = strpos( $data, "/" ) ) )
+        if( $data && ( $pos = strpos( $data, '/' ) ) )
             $data = substr( $data, 0, $pos );
 
-        return $data ? $data : "";
+        return $data ? $data : '';
     }
 
     function link_load( $password )
     {
-        $data = $_SERVER["REQUEST_URI"];
-        $pos = strrpos( $data, "/" );
+        $data = $_SERVER['REQUEST_URI'];
+        $pos = strrpos( $data, '/' );
         if( strlen( $data ) == $pos + 1 )
             $data = substr( $data, 0, -1 );
-        $pos = strrpos( $data, "/" );
+        $pos = strrpos( $data, '/' );
         $data = substr( $data, $pos + 1 );
 
         $cryptex = self::get_cryptex( $password );
@@ -90,7 +90,7 @@ class secqru_worker
 
     function link_exists()
     {
-        return strpos( $_SERVER["REQUEST_URI"], "/link/" );
+        return strpos( $_SERVER['REQUEST_URI'], '/link/' );
     }
 
     static public function rndhex( $size )
@@ -98,7 +98,7 @@ class secqru_worker
         for( $i = 0; $i < $size; $i++ )
         {
             if( ( $i % 3 ) == 0 ) 
-                $rseed = pack( "I", mt_rand() );
+                $rseed = pack( 'I', mt_rand() );
 
             if( $i == 0 )
                 $rnd = $rseed[ $i % 3 ];
@@ -116,9 +116,9 @@ class secqru_worker
 
     public function get_val( $name, $default, $type, &$print = 0 )
     {
-        if( strpos( $name, ":" ) )
+        if( strpos( $name, ':' ) )
         {
-            $print = explode( ":", $name );
+            $print = explode( ':', $name );
             $name = $print[0];
             $print = $print[1];
         }
@@ -138,11 +138,11 @@ class secqru_worker
                     return $val;
 
                 $default = self::get_default( $default );
-                self::ezlog( "default", $print, $default, 1 );
+                self::ezlog( 'default', $print, $default, 1 );
                 return $default;
 
             case 1: // dns like string
-                $val = preg_replace( "/[^A-Za-z0-9\-.]/", "", $raw );
+                $val = preg_replace( '/[^A-Za-z0-9\-.]/', '', $raw );
 
                 if( $val && $val == $raw ) {
                     return $val;
@@ -150,11 +150,11 @@ class secqru_worker
 
                 if( !$val ) {
                     $default = self::get_default( $default );
-                    self::ezlog( "default", $print, $default, 1 );
+                    self::ezlog( 'default', $print, $default, 1 );
                     return $default;
                 }
 
-                self::ezlog( "filtered", $print, $val, 1 );
+                self::ezlog( 'filtered', $print, $val, 1 );
                 return $val;
 
             case 2: // ip address
@@ -165,7 +165,7 @@ class secqru_worker
                 }
 
                 $default = self::get_default( $default );
-                self::ezlog( "default", $print, $default, 1 );
+                self::ezlog( 'default', $print, $default, 1 );
                 return $default;
 
             default:
@@ -187,7 +187,7 @@ class secqru_worker
         if( $min !== false && $int < $min )
         {
             $int = $min;
-            self::ezlog( "minimum", $print, $int, 1 );
+            self::ezlog( 'minimum', $print, $int, 1 );
         }
         else
 
@@ -195,7 +195,7 @@ class secqru_worker
         if( $max !== false && $int > $max )
         {
             $int = $max;
-            self::ezlog( "maximum", $print, $int, 1 );
+            self::ezlog( 'maximum', $print, $int, 1 );
         }
 
         return $int;
