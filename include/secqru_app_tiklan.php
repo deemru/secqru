@@ -36,7 +36,7 @@ class secqru_app_tiklan
 
         // GLOBAL PASSWORD SEED
         $g_psw = $this->w->get_dns( 'g_psw:password seed', function(){ return $this->w->rndhex( 8 ); } );
-        $g_seed = substr( sha1( $g_psw.__CLASS__ ), -8 ).'_';
+        $g_psw_prefix = substr( sha1( $g_psw ), -8 ) . '_';
 
         // GLOBAL IP RANGE
         $g_rng = $this->w->get_ip2long( 'g_rng:broadcast domain', ip2long( '192.168.160.0' ) );
@@ -146,7 +146,7 @@ class secqru_app_tiklan
             $subnets[$i]['addr_dhcp_last'] = long2ip( $subnets[$i]['subnet_end'] );
             $subnets[$i]['dhcp_pool_name'] = "$g_lan ({$subnets[$i]['name']}) Pool";
             $subnets[$i]['dhcp_server_name'] = "$g_lan ({$subnets[$i]['name']}) DHCP";
-            $subnets[$i]['psw'] = $g_seed . substr( sha1( $g_seed.$subnets[$i]['name'] ), -8 );
+            $subnets[$i]['psw'] = $g_psw_prefix . substr( sha1( $g_psw.$subnets[$i]['name'] ), -8 );
         }
 
         // TUNNEL ID CALC

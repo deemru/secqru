@@ -5,7 +5,7 @@
     define( 'SECQRU_PASS', 'password' );
 
     define( 'SECQRU_ADDR', 'http' .
-    ( ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] == 'on' ) ? 's' : '') .
+    ( ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] == 'on' ) ? 's' : '' ) .
     '://' . $_SERVER['HTTP_HOST'] . SECQRU_ROOT );
 
     date_default_timezone_set( 'Europe/Moscow' );

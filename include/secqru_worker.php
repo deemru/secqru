@@ -50,20 +50,12 @@ class secqru_worker
         return new secqru_cryptex( $password );
     }
 
-    function get_app( $root )
-    {
-        $data = $_SERVER['REQUEST_URI'];
-        $data = substr( $data, strlen( $root ) );
-
-        if( $data && ( $pos = strpos( $data, '/' ) ) )
-            $data = substr( $data, 0, $pos );
-
-        return $data ? $data : '';
-    }
-
     function link_load( $password )
     {
         $data = $_SERVER['REQUEST_URI'];
+        $pos = strpos( $data, '?' );
+        if( $pos )
+            $data = substr( $data, 0, $pos );
         $pos = strrpos( $data, '/' );
         if( strlen( $data ) == $pos + 1 )
             $data = substr( $data, 0, -1 );
