@@ -36,36 +36,50 @@
     require_once( 'include/secqru_worker.php' );
     $w = new secqru_worker();
 
-    $app = $w->get_app( SECQRU_ROOT );
-    // FILTER APPS
-    switch( $app )
+    $cmds = substr( $_SERVER['REQUEST_URI'], strlen( SECQRU_ROOT ) );
+    $cmds = explode( '/', $cmds );
+
+    if( !isset( $cmds[0] ) )
     {
-        case 'tiklan':
-            break;
-        default:
-            $app = '';
+        $w->log( '!isset( $cmds[0] )', 2 );
+        var_dump( $w->log );
+        exit( $w->log );
     }
 
-    $sw_app = $w->get_dns( 'sw_app', '' );
-    // FILTER APPS
-    switch( $sw_app )
+    $apps = array( 
+        '' => '',
+        'tiklan' => 'include/secqru_app_tiklan.php'
+    );
+
+    if( !isset( $apps[ $cmds[0] ] ) )
     {
-        case 'tiklan':
-            break;
-        case SECQRU_SITE:
-            $sw_app = '';
-            break;
-        default:
-            unset( $sw_app );
+        $w->log( 'unknown app', 2 );
+        exit( $w->log );
     }
 
-    if( isset( $sw_app ) && $sw_app != $app )
+    $app = $cmds[0];
+
+    if( -1 != ( $sw_app = $w->get_dns( 'sw_app', -1 ) ) )
     {
-        header( 'Location: '.SECQRU_ADDR.$sw_app );
-        exit;
+        $switches = array(
+            SECQRU_SITE => '',
+            'tiklan' => 'tiklan'
+            );
+
+        if( !isset( $switches[ $sw_app ] ) )
+        {
+            $w->log( 'unknown sw_app', 2 );
+            exit( $w->log );
+        }
+
+        $sw_app = $switches[ $sw_app ];
+
+        if( $app != $sw_app )
+        {
+            header( 'Location: ' . SECQRU_ADDR . $sw_app );
+            exit;
+        }
     }
-    else
-        unset( $sw_app );
 
     if( $w->link_exists() )
     {
@@ -80,7 +94,7 @@
         }
     }
 
-    if( $w->get_set( 'link' ) )
+    if( $app && $w->get_set( 'link' ) )
     {
         unset( $_POST['link'] );
         if( isset( $_POST['gamma'] ) )
@@ -210,10 +224,10 @@ a
     $html->put( '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' );
     $html->put( '<meta name="format-detection" content="telephone=no">' );
     if( $app )
-        $html->put( '<title>'.SECQRU_SITE." — $app</title>" );
+        $html->put( '<title>' . SECQRU_SITE . " — $app</title>" );
     else
-        $html->put( '<title>'.SECQRU_SITE.'</title>' );
-    $html->put( '<link rel="shortcut icon" href="'.SECQRU_ADDR.'favicon.ico" type="image/x-icon">' );
+        $html->put( '<title>' . SECQRU_SITE . '</title>' );
+    $html->put( '<link rel="shortcut icon" href="' . SECQRU_ADDR . 'favicon.ico" type="image/x-icon">' );
 
     // STYLE
     $html->open( 'style', ' type="text/css"' );
@@ -226,7 +240,7 @@ a
     $html->open( 'div', ' style="width: 80em; margin:0 auto; padding: 1em;"' );
 
     // FORM
-    $html->open( 'form', ' action="'.SECQRU_ADDR.$app.'" method="post"' );
+    $html->open( 'form', ' action="' . SECQRU_ADDR . $app . '" method="post"' );
     $html->input_full( 'submit', 'save', 0, 0, 'save', ' style="position: absolute; left: -100em;"' );
 
     $html->open( 'table' );
@@ -248,7 +262,7 @@ a
     $html->close();
 
     $html->open( 'td', ' align="right"' );
-    $html->put_submit( 'link', 'link' );
+    $html->input_full( 'submit', 'link', 0, 0, 'link', $app ? '' : 'r' );
     $html->put_input_hidden( 'gamma', $is_lite ? '1' : '0' );
     $html->put_submit( $is_lite ? 'sw_night' : 'sw_light', $is_lite ? 'night' : 'light' );
     $html->close();
