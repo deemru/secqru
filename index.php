@@ -1,76 +1,59 @@
 <?php
 
-    require( "secqru.config.php" );
+    require( 'secqru.config.php' );
 
-    ignore_user_abort( true );
-    set_time_limit( 0 );
-    date_default_timezone_set( "Europe/Moscow" );
-    mb_internal_encoding( "UTF-8" );
-
-    if( defined( "DEBUG" ) )
+    if( defined( 'SECQRU_LOCKIP' ) )
     {
-        ini_set( 'display_errors', TRUE );
-        ini_set( 'display_startup_errors', TRUE );
-        ini_set( "log_errors", 1 );
-        ini_set( "error_log", "./log/_error.log" );
-        error_reporting( E_ALL );
-    }
+        require_once( 'include/secqru_flock.php' );
 
-    if( defined( "SECQRU_DELAY" ) )
-    {
-        require( "include/secqru_flock.php" );
-
-        $ip_lock = new secqru_flock( "./log/ip/{$_SERVER["REMOTE_ADDR"]}.lock" );
+        $ip_lock = new secqru_flock( SECQRU_LOCKIP.$_SERVER['REMOTE_ADDR'] );
         if( !$ip_lock->open() )
         {
-            header( "Status: 503 Service Temporarily Unavailable" );
-            header( "Retry-After: 10" );
-            exit( "503" );
+            header( 'Status: 503 Service Temporarily Unavailable' );
+            header( 'Retry-After: 10' );
+            exit( '503' );
         }
     }
 
-    if( defined( "DEBUG" ) )
+    if( defined( 'SECQRU_ERRORLOG' ) )
     {
-        require_once( "include/secqru_flock.php" );
-
-        $debug_line = date( "Y.m.d H:i:s | " ).str_pad( $_SERVER["REMOTE_ADDR"], 15 )." | ".$_SERVER['REQUEST_URI'].PHP_EOL;
-
-        $debug_log = new secqru_flock( "./log/{$_SERVER["REMOTE_ADDR"]}.log" );
-        $debug_log->append( $debug_line );
-
-        $debug_log = new secqru_flock( "./log/_debug.log" );
-        $debug_log->append( $debug_line );
-
-        unset( $debug_line );
-        unset( $debug_log );
+        error_reporting( -1 );
+        ini_set( 'display_errors', TRUE );
+        ini_set( 'display_startup_errors', TRUE );
+        ini_set( 'log_errors', 1 );
+        ini_set( 'error_log', SECQRU_ERRORLOG );
     }
 
-    if( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] == "on" )
-        define( "SECQRU_ADDR", "https://".$_SERVER["HTTP_HOST"].SECQRU_ROOT );
-    else
-        define( "SECQRU_ADDR", "http://".$_SERVER["HTTP_HOST"].SECQRU_ROOT );
+    if( defined( 'SECQRU_DEBUGLOG' ) )
+    {
+        require_once( 'include/secqru_flock.php' );
 
-    require( "include/secqru_worker.php" );
+        ( new secqru_flock( SECQRU_DEBUGLOG ) )->append(
+        date( 'Y.m.d H:i:s | ' ) . str_pad( $_SERVER['REMOTE_ADDR'], 15 )
+        . ' | ' . $_SERVER['REQUEST_URI'].PHP_EOL );
+    }
+
+    require_once( 'include/secqru_worker.php' );
     $w = new secqru_worker();
 
     $app = $w->get_app( SECQRU_ROOT );
     // FILTER APPS
     switch( $app )
     {
-        case "tiklan":
+        case 'tiklan':
             break;
         default:
-            $app = "";
+            $app = '';
     }
 
-    $sw_app = $w->get_dns( "sw_app", "" );
+    $sw_app = $w->get_dns( 'sw_app', '' );
     // FILTER APPS
     switch( $sw_app )
     {
-        case "tiklan":
+        case 'tiklan':
             break;
         case SECQRU_SITE:
-            $sw_app = "";
+            $sw_app = '';
             break;
         default:
             unset( $sw_app );
@@ -78,7 +61,7 @@
 
     if( isset( $sw_app ) && $sw_app != $app )
     {
-        header( "Location: ".SECQRU_ADDR.$sw_app );
+        header( 'Location: '.SECQRU_ADDR.$sw_app );
         exit;
     }
     else
@@ -88,48 +71,48 @@
     {
         if( $w->link_load( SECQRU_PASS ) )
         {
-            $w->log( "link loaded", 7 );
+            $w->log( 'link loaded', 7 );
         }
         else
         {
-            $w->log( "bad link", 2 );
-            $_POST["reset"] = 1;
+            $w->log( 'bad link', 2 );
+            $_POST['reset'] = 1;
         }
     }
 
-    if( $w->get_set( "link" ) )
+    if( $w->get_set( 'link' ) )
     {
-        unset( $_POST["link"] );
-        if( isset( $_POST["gamma"] ) )
-            unset( $_POST["gamma"] );
+        unset( $_POST['link'] );
+        if( isset( $_POST['gamma'] ) )
+            unset( $_POST['gamma'] );
         // filter $_POST content
-        $app = $app ? "$app/link/" : "link/";
+        $app = $app ? "$app/link/" : 'link/';
         $link = SECQRU_ADDR.$app.$w->link_get( SECQRU_PASS );
         header( "Location: $link" );
         exit;
     }
 
-    if( $w->get_set( "sw_light" ) )
+    if( $w->get_set( 'sw_light' ) )
     {
         $is_lite = 1;
-        setcookie( "gamma", 1 );
-        $w->log( "switch to light", 7 );
+        setcookie( 'gamma', 1 );
+        $w->log( 'switch to light', 7 );
     }
-    else if( $w->get_set( "sw_night" ) )
+    else if( $w->get_set( 'sw_night' ) )
     {
         $is_lite = 0;
-        setcookie( "gamma", 0 );
-        $w->log( "switch to night", 7 );
+        setcookie( 'gamma', 0 );
+        $w->log( 'switch to night', 7 );
     }
     else
     {
-        if( isset( $_COOKIE["gamma"] ) )
+        if( isset( $_COOKIE['gamma'] ) )
         {
-            $is_lite = intval( $_COOKIE["gamma"] );
+            $is_lite = intval( $_COOKIE['gamma'] );
             $is_lite = $is_lite ? 1 : 0;
         }
         else
-            $is_lite = $w->get_int( "gamma", 1, 0, 1 );
+            $is_lite = $w->get_int( 'gamma', 1, 0, 1 );
     }
 
   $color_back = $is_lite ? 'E0E0D0' : '404840';
@@ -218,80 +201,80 @@ a
     color: #$color_link;
 }";
 
-    require( "include/secqru_html.php" );
+    require_once( 'include/secqru_html.php' );
     $html = new secqru_html();
 
     // HEAD
-    $html->open( "html", ' style="overflow-y: scroll;"' );
-    $html->open( "head" );
+    $html->open( 'html', ' style="overflow-y: scroll;"' );
+    $html->open( 'head' );
     $html->put( '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' );
     $html->put( '<meta name="format-detection" content="telephone=no">' );
     if( $app )
-        $html->put( "<title>".SECQRU_SITE." — $app</title>" );
+        $html->put( '<title>'.SECQRU_SITE." — $app</title>" );
     else
-        $html->put( "<title>".SECQRU_SITE."</title>" );
+        $html->put( '<title>'.SECQRU_SITE.'</title>' );
     $html->put( '<link rel="shortcut icon" href="'.SECQRU_ADDR.'favicon.ico" type="image/x-icon">' );
 
     // STYLE
-    $html->open( "style", ' type="text/css"' );
+    $html->open( 'style', ' type="text/css"' );
     $html->put( explode( PHP_EOL, $style ) );
     $html->close();
     $html->close();
 
     // BODY
-    $html->open( "body" );
-    $html->open( "div", ' style="width: 80em; margin:0 auto; padding: 1em;"' );
+    $html->open( 'body' );
+    $html->open( 'div', ' style="width: 80em; margin:0 auto; padding: 1em;"' );
 
     // FORM
-    $html->open( "form", ' action="'.SECQRU_ADDR.$app.'" method="post"' );
-    $html->input_full( "submit", "save", 0, 0, "save", ' style="position: absolute; left: -100em;"' );
+    $html->open( 'form', ' action="'.SECQRU_ADDR.$app.'" method="post"' );
+    $html->input_full( 'submit', 'save', 0, 0, 'save', ' style="position: absolute; left: -100em;"' );
 
-    $html->open( "table" );
-    $html->open( "tr" );
-    $html->open( "td" );
-    $html->input_full( "submit", "sw_app", 0, 0, SECQRU_SITE, "r" );
-    $html->add(" — ");
-    if( $app == "tiklan" )
+    $html->open( 'table' );
+    $html->open( 'tr' );
+    $html->open( 'td' );
+    $html->input_full( 'submit', 'sw_app', 0, 0, SECQRU_SITE, $app ? '' : 'r' );
+    $html->add( ' — ' );
+    if( $app == 'tiklan' )
     {
-        $html->input_full( "submit", "sw_app", 0, 0, $app, 'r' );
-        $html->add(" — ");
-        $html->put_submit( "help", "help" );
-        $html->put_submit( "reset", "reset" );
+        $html->input_full( 'submit', 'sw_app', 0, 0, $app, 'r' );
+        $html->add( ' — ' );
+        $html->put_submit( 'help', 'help' );
+        $html->put_submit( 'reset', 'reset' );
     }
     else
     {
-        $html->put_submit( "sw_app", "tiklan" );
+        $html->put_submit( 'sw_app', 'tiklan' );
     }
     $html->close();
 
-    $html->open( "td", ' align="right"' );
-    $html->put_submit( "link", "link" );
-    $html->put_input_hidden( "gamma", $is_lite ? "1" : "0" );
-    $html->put_submit( $is_lite ? "sw_night" : "sw_light", $is_lite ? "night" : "light" );
+    $html->open( 'td', ' align="right"' );
+    $html->put_submit( 'link', 'link' );
+    $html->put_input_hidden( 'gamma', $is_lite ? '1' : '0' );
+    $html->put_submit( $is_lite ? 'sw_night' : 'sw_light', $is_lite ? 'night' : 'light' );
     $html->close();
     $html->close();
     $html->close();
 
-    if( $app == "tiklan" )
+    if( $app == 'tiklan' )
     {
-        include "include/secqru_app_tiklan.php";
+        require_once 'include/secqru_app_tiklan.php';
         $a = new secqru_app_tiklan( $w );
         $html->put( $a->html() );
     }
     else
     {
-        $html->put( "<hr>" );
-        $html->open( "div", ' align="right"' );
-        $html->open( "div", " class=\"textarea\"" );
+        $html->put( '<hr>' );
+        $html->open( 'div', ' align="right"' );
+        $html->open( 'div', ' class="textarea"' );
         $html->put( $w->log );
         $html->close();
         $html->close();
     }
 
-    $html->put("<hr>");
-    $html->open( "div", " style=\"text-align: right;\"" );
+    $html->put( '<hr>' );
+    $html->open( 'div', ' style="text-align: right;"' );
     $html->put( '<a href="https://github.com/deemru/secqru">github.com/deemru/secqru</a>' );
     echo $html->render();
-    echo '<div  style="text-align: right;">'.memory_get_peak_usage()."<br>".round( ( microtime( TRUE ) - $_SERVER['REQUEST_TIME_FLOAT'] ), 4 )."</div>";
+    echo '<div  style="text-align: right;">'.memory_get_peak_usage().'<br>'.round( ( microtime( TRUE ) - $_SERVER['REQUEST_TIME_FLOAT'] ), 4 ).'</div>';
 
 ?>
