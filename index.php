@@ -36,74 +36,26 @@
     require_once( 'include/secqru_worker.php' );
     $w = new secqru_worker();
 
-    $cmds = substr( $_SERVER['REQUEST_URI'], strlen( SECQRU_ROOT ) );
-    $cmds = explode( '/', $cmds );
-
-    if( !isset( $cmds[0] ) )
-    {
-        $w->log( '!isset( $cmds[0] )', 2 );
-        var_dump( $w->log );
-        exit( $w->log );
-    }
+    $w->init_url( SECQRU_ROOT );
 
     $apps = array( 
         '' => '',
         'tiklan' => 'include/secqru_app_tiklan.php'
     );
 
-    if( !isset( $apps[ $cmds[0] ] ) )
+    $app = $w->get_app( $apps );
+
+    $switches = array(
+        SECQRU_SITE => '',
+        'tiklan' => 'tiklan'
+        );
+
+    $w->switch_app( $app, $switches );
+
+    if( $app )
     {
-        $w->log( 'unknown app', 2 );
-        exit( $w->log );
-    }
-
-    $app = $cmds[0];
-
-    if( -1 != ( $sw_app = $w->get_dns( 'sw_app', -1 ) ) )
-    {
-        $switches = array(
-            SECQRU_SITE => '',
-            'tiklan' => 'tiklan'
-            );
-
-        if( !isset( $switches[ $sw_app ] ) )
-        {
-            $w->log( 'unknown sw_app', 2 );
-            exit( $w->log );
-        }
-
-        $sw_app = $switches[ $sw_app ];
-
-        if( $app != $sw_app )
-        {
-            header( 'Location: ' . SECQRU_ADDR . $sw_app );
-            exit;
-        }
-    }
-
-    if( $w->link_exists() )
-    {
-        if( $w->link_load( SECQRU_PASS ) )
-        {
-            $w->log( 'link loaded', 7 );
-        }
-        else
-        {
-            $w->log( 'bad link', 2 );
-            $_POST['reset'] = 1;
-        }
-    }
-
-    if( $app && $w->get_set( 'link' ) )
-    {
-        unset( $_POST['link'] );
-        if( isset( $_POST['gamma'] ) )
-            unset( $_POST['gamma'] );
-        // filter $_POST content
-        $app = $app ? "$app/link/" : 'link/';
-        $link = SECQRU_ADDR.$app.$w->link_get( SECQRU_PASS );
-        header( "Location: $link" );
-        exit;
+        $w->link_produce( SECQRU_PASS );
+        $w->link_load( SECQRU_PASS );
     }
 
     if( $w->get_set( 'sw_light' ) )

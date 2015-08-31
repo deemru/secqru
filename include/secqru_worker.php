@@ -2,7 +2,8 @@
 
 class secqru_worker
 {
-    public $log = '';
+    public $log = array();
+    public $url = array();
 
     public function ezlog( $message, $print, $value, $level = 0 ) {
         return self::log( "$message \"$print\" = \"$value\"", $level );
@@ -40,8 +41,49 @@ class secqru_worker
         }
 
         $log_string = $level.$message.$log_string.PHP_EOL;
-        $this->log .= $log_string;
+        $this->log[] = $log_string;
         return $log_string;
+    }
+
+    function link_exists()
+    {
+        return strpos( $_SERVER['REQUEST_URI'], '/link/' );
+    }
+
+    function init_url( $root )
+    {
+        $this->url = substr( $_SERVER['REQUEST_URI'], strlen( $root ) );
+        $this->url = explode( '/', $this->url );
+
+        if( !isset( $this->url[0] ) )
+            exit( self::log( 'bad url', 3 ) );
+    }
+
+    function get_app( $apps )
+    {
+        if( !isset( $this->url[0] ) )
+            exit( self::log( 'unknown app', 3 ) );
+
+        return $this->url[0];
+    }
+
+    function switch_app( $app, $switches )
+    {
+        $sw_app = self::get_dns( 'sw_app', -1 );
+
+        if( $sw_app == -1 )
+            return;
+
+        if( !isset( $switches[$sw_app] ) )
+            exit( self::log( 'unknown app', 3 ) );
+
+        $sw_app = $switches[$sw_app];
+
+        if( $app != $sw_app )
+        {
+            header( 'Location: ' . SECQRU_ADDR . $sw_app );
+            exit;
+        }
     }
 
     private function get_cryptex( $password )
@@ -50,39 +92,68 @@ class secqru_worker
         return new secqru_cryptex( $password );
     }
 
+    function link_produce( $password )
+    {
+        if( self::get_set( 'link' ) )
+        {
+            unset( $_POST['link'] );
+
+            if( isset( $_POST['gamma'] ) )
+                unset( $_POST['gamma'] );
+
+            $cryptex = self::get_cryptex( $password );
+            $link = $cryptex->cryptex( serialize( $_POST ) );
+
+            $link = SECQRU_ADDR.$this->url[0].'/link/'.$link;
+            header( "Location: $link" );
+            exit;
+        }
+    }
+
+    function get_raw_link( $n )
+    {
+        if( isset( $this->url[1] ) && $this->url[1] == 'link' &&
+            isset( $this->url[2] ) )
+        {
+            return SECQRU_ADDR . $this->url[0] . '/' . $this->url[1] . '/' . $this->url[2] . '/raw/' . $n;
+        }
+
+        return 0;
+    }
+
     function link_load( $password )
     {
-        $data = $_SERVER['REQUEST_URI'];
-        $pos = strpos( $data, '?' );
-        if( $pos )
-            $data = substr( $data, 0, $pos );
-        $pos = strrpos( $data, '/' );
-        if( strlen( $data ) == $pos + 1 )
-            $data = substr( $data, 0, -1 );
-        $pos = strrpos( $data, '/' );
-        $data = substr( $data, $pos + 1 );
+        if( isset( $this->url[1] ) && $this->url[1] == 'link' &&
+            isset( $this->url[2] ) )
+        {
+            $cryptex = self::get_cryptex( $password );
+            $data = $cryptex->decryptex( $this->url[2] );
 
-        $cryptex = self::get_cryptex( $password );
-        $data = $cryptex->decryptex( $data );
-        if( !$data )
-            return 0;
+            if( !$data )
+                exit( self::log( 'bad link', 3 ) );
 
-        $_POST = unserialize( $data );
-        if( $_POST === FALSE )
-            return 0;
+            $_POST = unserialize( $data );
 
-        return 1;
+            if( $_POST === FALSE )
+                exit( self::log( 'bad link', 3 ) );
+
+            self::log( 'link', 7 );
+        }
     }
 
-    function link_get( $password )
+    function get_raw()
     {
-        $cryptex = self::get_cryptex( $password );
-        return $cryptex->cryptex( serialize( $_POST ) );
-    }
+        if( isset( $this->url[3] ) && $this->url[3] == 'raw' &&
+            isset( $this->url[4] ) )
+        {
+            $val = intval( $this->url[4] );
+            if( strval( $val ) != $this->url[4] )
+                exit( self::log( "bad raw", 3 ) );
 
-    function link_exists()
-    {
-        return strpos( $_SERVER['REQUEST_URI'], '/link/' );
+            return $val;
+        }
+        else
+            return 0;
     }
 
     static public function rndhex( $size )

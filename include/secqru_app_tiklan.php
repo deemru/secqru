@@ -24,13 +24,12 @@ class secqru_app_tiklan
     function html()
     {
         // RESET
-        $g_reset = $this->w->get_set( 'reset' );
-        if( $g_reset )
+        if( $this->w->get_set( 'reset' ) )
         {
             unset( $_POST );
             $this->w->log( 'reset to defaults', 7 );
         }
-        
+
         // GLOBAL NETWORK ADDRESS
         $g_lan = $this->w->get_dns( 'g_lan:bridge name', 'TikLAN' );
 
@@ -82,6 +81,9 @@ class secqru_app_tiklan
             for( $i = 1; $i <= $subnum; $i++ )
                 $this->w->clear( "subnet$i" );
             $this->w->clear( 'g_eoip' );
+
+            if( $this->w->get_set( 'g_rw' ) )
+                $this->w->log( 'global range changed', 1 );
         }
 
         // GLOBAL EOIP TUNNEL ID SEED
@@ -116,11 +118,11 @@ class secqru_app_tiklan
             {
                 case 'v':
                     $subnets[$i]['is_pub'] = true;
-                    $this->w->ezlog( 'switch', $subnets[$i]['name'], 'public address', 7 );
+                    $this->w->ezlog( 'switch', $subnets[$i]['name'], 'public', 7 );
                     break;
                 case 'x':
                     $subnets[$i]['is_pub'] = false;
-                    $this->w->ezlog( 'switch', $subnets[$i]['name'], 'no public address', 7 );
+                    $this->w->ezlog( 'switch', $subnets[$i]['name'], 'private', 7 );
                     break;
             }
 
@@ -246,6 +248,34 @@ class secqru_app_tiklan
             }
         }
 
+        // RAW view
+        $raw = $this->w->get_raw();
+        if( $raw && ( $raw < 1 || $raw > $subnum ) )
+            exit( $this->w->log( "raw out of range", 3 ) );
+
+        if( $this->w->get_set( 'save' ) )
+            $this->w->log( 'save', 7 );
+
+        // DISPLAY HELP / RESET/ LOG
+        $help = array();
+        if( $this->w->get_set( 'help' ) )
+        {
+            $help = '# HELP:
+* This web application helps you to setup, maintain and expand a single broadcast domain between your routers.
+* It needs at least 2 routers with at least 1 public ip address on one of them.
+* Setup appropriate parameters on the left side, then use corresponding generated scripts.
+* The final result is "'.$g_lan.'" bridge, which represents your single broadcast domain.
+* Test this bridge with ping and stuff, if everything is fine add ports to it and enjoy.
+* Do not forget to save your configuration with "link" button so you can easily add more routers later.
+
+* Have a question? Found a bug? Have an improvement idea? Contact — deem@deem.ru';
+            $help = explode( '
+', $help );
+        }
+
+        if( !$this->w->log && !$help )
+            $this->w->log( 'no action', 7 );
+
         $html_select = new secqru_html();
         $html_select->open_select( 'g_sel' );
 
@@ -268,34 +298,6 @@ class secqru_app_tiklan
             $html_vpn->put_option( $key, $key, $g_vpn == $key );
 
         $html_vpn->close();
-
-        $actionlog = '';
-        $actionlog .= $this->w->log;
-
-        define('NEWLINER', '<br>'.PHP_EOL );
-
-        // DISPLAY HELP / RESET/ LOG
-        if( isset( $_POST['help'] ) )
-            $actionlog = '# HELP:
-    * This web application helps you to setup, maintain and expand a single broadcast domain between your routers.
-    * It needs at least 2 routers with at least 1 public ip address on one of them.
-    * Setup appropriate parameters on the left side, then use corresponding generated scripts.
-    * The final result is "'.$g_lan.'" bridge, which represents your single broadcast domain.
-    * Test this bridge with ping and stuff, if everything is fine add ports to it and enjoy.
-    * Do not forget to save your configuration with "link" button so you can easily add more routers later.
-
-    * Have a question? Found a bug? Have an improvement idea? Contact — deem@deem.ru';
-        else if( $g_reset )
-            $actionlog = '# SUCCESS: reset to defaults'.NEWLINER;
-        else
-        {
-            if( $g_changed )
-                $actionlog .= '# WARNING: ranges changed'.NEWLINER;
-            if( isset( $_POST['save'] ) )
-                $actionlog .= '# SUCCESS: configuration saved'.NEWLINER;
-            if( $actionlog == '' )
-                $actionlog = '# UNKNOWN';
-        }
 
         $html_setup = new secqru_html();
 
@@ -345,7 +347,8 @@ class secqru_app_tiklan
         {
             $html_setup->open( 'td', ' valign="top" align="right"' );
             $html_setup->open( 'div', ' class="textarea"' );
-            $html_setup->add( $actionlog );
+            $html_setup->put( $this->w->log, 1 );
+            $html_setup->put( $help, 1 );
             $html_setup->close();
             $html_setup->close();
         }
@@ -368,7 +371,7 @@ class secqru_app_tiklan
                 $html_setup->add( ' — router name', 1 );
 
                 $html_setup->put_input_hidden( "is_pub$i", $subnets[$i]['is_pub'] ? '1' : '0' );
-                $html_setup->input_full( 'text', "pub$i", self::formsize, 50, $subnets[$i]['pub'], $subnets[$i]['is_pub'] ? ( $subnets[$i]['pub_ok'] ? '' : 'e' ) : 'r' );
+                $html_setup->input_full( 'text', "pub$i", self::formsize, 50, $subnets[$i]['pub'], $subnets[$i]['is_pub'] ? ( $subnets[$i]['pub_ok'] ? '' : 'e' ) : ( $nopublic ? 'e' : 'r' ) );
                 $html_setup->put_submit( "sw_pub$i", $subnets[$i]['is_pub'] ? 'x' : 'v' );
                 $html_setup->add( ' — public address', 1 );
 
@@ -393,6 +396,13 @@ class secqru_app_tiklan
             $html_setup->close();
 
             $html_config = new secqru_html();
+
+            if( !$raw )
+            {
+                $raw_link = $this->w->get_raw_link( $i );
+                if( $raw_link )
+                    $html_config->put( "# RAW: <a href=\"$raw_link\">{$subnets[$i]['name']}</a>", 1 );
+            }
 
             // GATEWAY OR NEWBIE
             if( !$g_sel || ( $g_sel && $g_sel == $i ) )
@@ -516,6 +526,10 @@ class secqru_app_tiklan
 
             $html_setup->open( 'td', ' valign="top" align="right"' );
             $html_setup->open( 'div', ' class="textarea"' );
+            if( $raw && $raw == $i )
+            {
+                exit( $html_config->render() );
+            }
             {
                 $html_setup->put( $html_config );
             }
