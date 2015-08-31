@@ -1,4 +1,5 @@
 # robots.txt
 User-agent: *
+Disallow: /.git
 Disallow: /include
 Disallow: /log
