@@ -37,10 +37,10 @@ class secqru_worker
             case 3: $level = '# CRITICAL: '; break;
             case 7: $level = '# SUCCESS: '; break;
             default:
-                exit( "# CRITICAL: unknown level == $level".$log_string.PHP_EOL );
+                exit( "# CRITICAL: unknown level == $level".$log_string );
         }
 
-        $log_string = $level.$message.$log_string.PHP_EOL;
+        $log_string = $level.$message.$log_string;
         $this->log[] = $log_string;
         return $log_string;
     }
