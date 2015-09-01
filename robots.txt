@@ -2,4 +2,4 @@
 User-agent: *
 Disallow: /.git
 Disallow: /include
-Disallow: /log
+Disallow: /var

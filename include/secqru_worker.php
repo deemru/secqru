@@ -11,7 +11,7 @@ class secqru_worker
 
     public function log( $message, $level = 0 )
     {
-        if( defined( 'DEBUG' ) && DEBUG )
+        if( defined( 'SECQRU_DEBUG' ) && SECQRU_DEBUG )
         {
             $dbg = debug_backtrace();
             $log_string = ' (';
@@ -110,12 +110,12 @@ class secqru_worker
         }
     }
 
-    function get_raw_link( $n )
+    function get_raw_link()
     {
         if( isset( $this->url[1] ) && $this->url[1] == 'link' &&
             isset( $this->url[2] ) )
         {
-            return SECQRU_ADDR . $this->url[0] . '/' . $this->url[1] . '/' . $this->url[2] . '/raw/' . $n;
+            return SECQRU_ADDR . $this->url[0] . '/' . $this->url[1] . '/' . $this->url[2] . '/raw/';
         }
 
         return 0;

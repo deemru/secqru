@@ -12,8 +12,9 @@
     mb_internal_encoding( 'UTF-8' );
 
     define( 'SECQRU_DEBUG', 1 );
-    define( 'SECQRU_ERRORLOG', './log/_error.log' );
-    define( 'SECQRU_DEBUGLOG', './log/_debug.log' );
-    define( 'SECQRU_LOCKIP', './log/ip/' );
+    define( 'SECQRU_ERRORLOG', './var/log/_error.log' );
+    define( 'SECQRU_ACCESSLOG', './var/log/access.log' );
+    define( 'SECQRU_APPLOG', './var/log/%s.log' );
+    define( 'SECQRU_LOCKIP', './var/lock/' );
 
 ?>

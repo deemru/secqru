@@ -24,11 +24,11 @@
         ini_set( 'error_log', SECQRU_ERRORLOG );
     }
 
-    if( defined( 'SECQRU_DEBUGLOG' ) )
+    if( defined( 'SECQRU_ACCESSLOG' ) )
     {
         require_once( 'include/secqru_flock.php' );
 
-        ( new secqru_flock( SECQRU_DEBUGLOG ) )->append(
+        ( new secqru_flock( SECQRU_ACCESSLOG ) )->append(
         date( 'Y.m.d H:i:s | ' ) . str_pad( $_SERVER['REMOTE_ADDR'], 15 )
         . ' | ' . $_SERVER['REQUEST_URI'].PHP_EOL );
     }
@@ -58,6 +58,15 @@
         $w->link_load( SECQRU_PASS );
     }
 
+    if( defined( 'SECQRU_APPLOG' ) && $app )
+    {
+        require_once( 'include/secqru_flock.php' );
+
+        ( new secqru_flock( sprintf( SECQRU_APPLOG, $app ) ) )->append(
+        date( 'Y.m.d H:i:s | ' ) . str_pad( $_SERVER['REMOTE_ADDR'], 15 )
+        . ' | ' . $_SERVER['REQUEST_URI'].PHP_EOL );
+    }
+
     if( $w->get_set( 'sw_light' ) )
     {
         $is_lite = 1;
@@ -81,15 +90,15 @@
             $is_lite = $w->get_int( 'gamma', 1, 0, 1 );
     }
 
-  $color_back = $is_lite ? 'E0E0D0' : '404840';
-  $color_lite = $is_lite ? 'FFFFFF' : 'A0A8B0';
-  $color_txt1 = $is_lite ? '202010' : 'A0A8B0';
-  $color_txt2 = $is_lite ? '202010' : '101820';  
-  $color_bord = $is_lite ? 'B0B0A0' : '606870';
-  $color_link = $is_lite ? '606050' : '808890';
-  $style_font_fixed = 'font-size: 12pt; font-family: "Courier New", Courier, monospace;';
+    $color_back = $is_lite ? 'E0E0D0' : '404840';
+    $color_lite = $is_lite ? 'FFFFFF' : 'A0A8B0';
+    $color_txt1 = $is_lite ? '202010' : 'A0A8B0';
+    $color_txt2 = $is_lite ? '202010' : '101820';  
+    $color_bord = $is_lite ? 'B0B0A0' : '606870';
+    $color_link = $is_lite ? '606050' : '808890';
+    $style_font_fixed = 'font-size: 12pt; font-family: "Courier New", Courier, monospace;';
 
-  $style =
+    $style =
 "body, table, input, select
 {
     #white-space: nowrap;
@@ -149,6 +158,7 @@ div.textarea
     background: #$color_back;
     color: #$color_txt1;
 }
+
 .red {
     background: #e08080;
     color: #000000;
@@ -241,6 +251,8 @@ a
     $html->open( 'div', ' style="text-align: right;"' );
     $html->put( '<a href="https://github.com/deemru/secqru">github.com/deemru/secqru</a>' );
     echo $html->render();
-    echo '<div  style="text-align: right;">'.memory_get_peak_usage().'<br>'.round( ( microtime( TRUE ) - $_SERVER['REQUEST_TIME_FLOAT'] ), 4 ).'</div>';
+
+    if( defined( 'SECQRU_DEBUG' ) && SECQRU_DEBUG )
+        echo '<center><small>'.sprintf( 'Memory: %.02f KB', memory_get_peak_usage()/1024 ).'<br>'.sprintf( 'Speed: %.01f ms', 1000 * ( microtime( TRUE ) - $_SERVER['REQUEST_TIME_FLOAT'] ) ).'</small></center>';
 
 ?>

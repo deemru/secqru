@@ -253,6 +253,18 @@ class secqru_app_tiklan
         if( $raw && ( $raw < 1 || $raw > $subnum ) )
             exit( $this->w->log( "raw out of range", 3 ) );
 
+        if( $raw )
+        {
+            $router_config = self::get_config( $g_lan, $g_cidr, $g_vpn, $vpn_protocols, $g_horizon, $subnets, $subnum, $g_sel, $raw );
+
+            header('Content-Type: text/plain');
+
+            foreach( $router_config as $line )
+                echo $line.PHP_EOL;
+
+            exit;
+        }
+
         if( $this->w->get_set( 'save' ) )
             $this->w->log( 'save', 7 );
 
@@ -349,6 +361,15 @@ class secqru_app_tiklan
             $html_setup->open( 'div', ' class="textarea"' );
             $html_setup->put( $this->w->log, 1 );
             $html_setup->put( $help, 1 );
+            if( !$raw )
+            {
+                $raw_link = $this->w->get_raw_link();
+                if( $raw_link )
+                {
+                    for( $i = 1; $i <= $subnum; $i++ )
+                        $html_setup->put( "# RAW: <a href=\"$raw_link$i\">{$subnets[$i]['name']}</a>", 1 );
+                }
+            }
             $html_setup->close();
             $html_setup->close();
         }
@@ -395,150 +416,144 @@ class secqru_app_tiklan
             $html_setup->close();
             $html_setup->close();
 
-            $html_config = new secqru_html();
-
-            if( !$raw )
-            {
-                $raw_link = $this->w->get_raw_link( $i );
-                if( $raw_link )
-                    $html_config->put( "# RAW: <a href=\"$raw_link\">{$subnets[$i]['name']}</a>", 1 );
-            }
-
-            // GATEWAY OR NEWBIE
-            if( !$g_sel || ( $g_sel && $g_sel == $i ) )
-            {
-                // GW
-                $html_config->put( "# GW ({$subnets[$i]['name']})", 1 );
-                $html_config->put( "interface bridge add name=\"$g_lan\"", 1 );
-                $html_config->put( "ip address add address={$subnets[$i]['addr_gw']}/$g_cidr interface=\"$g_lan\"", 1 );
-                $html_config->put( "ip route add dst-address={$subnets[0]['addr_subnet']}/24 type=unreachable distance=250", 1 );
-                $html_config->put ( '', 1 );
-
-                // DHCP
-                $html_config->put( "# DHCP ({$subnets[$i]['name']})", 1 );
-                $html_config->put( "ip pool add ranges={$subnets[$i]['addr_dhcp_first']}-{$subnets[$i]['addr_dhcp_last']} name=\"{$subnets[$i]['dhcp_pool_name']}\"", 1 );
-                $html_config->put( "ip dhcp-server network add address={$subnets[$i]['addr_subnet']}/{$subnets[$i]['subnet_cidr']} gateway={$subnets[$i]['addr_gw']} dns-server={$subnets[$i]['addr_gw']}", 1 );
-                $html_config->put( "ip dhcp-server add name=\"{$subnets[$i]['dhcp_server_name']}\" interface=\"$g_lan\" address-pool=\"{$subnets[$i]['dhcp_pool_name']}\"", 1 );
-                $html_config->put( "ip dhcp-server enable \"{$subnets[$i]['dhcp_server_name']}\"", 1 );
-                $html_config->put ( '', 1 );
-            }
-
-            // PPP PROFILE ADD
-            $ppp_profile_name = 'default-encryption';
-            $ppp_timeout = '17';
-
-            // PPP SECRET ADD
-            $ppp_users = array();
-            $ppp_servers = array();
-            $ppp_clients = array();
-            $ppp_routes = array();
-
-            for( $s = 1; $s <= $subnum; $s++ )
-            {
-                if( $i != $s && ( !$g_sel || ( $g_sel && $g_sel == $s ) || ( $g_sel && $g_sel == $i ) ) )
-                {
-                    $is_client = false;
-                    $is_server = false;
-
-                    if( $subnets[$s]['is_pub'] )
-                    {
-                        if( !$subnets[$i]['is_pub'] )
-                        {
-                            $is_client = true;
-                        }
-                        else
-                        {
-                            if( $subnets[$i]['dist'] > $subnets[$s]['dist'] || ( $subnets[$i]['dist'] == $subnets[$s]['dist'] && $i > $s ) )
-                            {
-                                $is_client = true;
-                            }
-                            else
-                            {
-                                $is_server = true;
-                            }
-                        }
-                    }
-                    else if( $subnets[$i]['is_pub'] )
-                    {
-                        $is_server = true;
-                    }
-
-                    if( $is_client )
-                    {
-                        $ppp_client_name = "$g_lan-$g_vpn-Client-{$subnets[$s]['name']}";
-                        $ppp_routes[] = "ip route add dst-address={$subnets[0]['addr_subnet']}/24 gateway=$ppp_client_name distance={$subnets[$s]['dist']}";
-                        $ppp_clients[] = "interface {$vpn_protocols[$g_vpn]}-client add connect-to=\"{$subnets[$s]['pub']}\" name=\"$ppp_client_name\" user=\"$g_lan-{$subnets[$i]['name']}\" password=\"{$subnets[$i]['psw']}\" profile=\"$ppp_profile_name\" keepalive-timeout=$ppp_timeout";
-                    }
-                    else if( $is_server )
-                    {
-                        $ppp_server_name = "$g_lan-$g_vpn-Server-{$subnets[$s]['name']}";
-                        $ppp_users[] = "ppp secret add name=\"$g_lan-{$subnets[$s]['name']}\" password=\"{$subnets[$s]['psw']}\" profile=\"$ppp_profile_name\" local-address={$subnets[$i]['addr_vpn']} remote-address={$subnets[$s]['addr_vpn']} routes=\"{$subnets[0]['addr_subnet']}/24 {$subnets[$s]['addr_vpn']} {$subnets[$s]['dist']}\"";
-                        $ppp_servers[] = "interface {$vpn_protocols[$g_vpn]}-server add name=\"$ppp_server_name\" user=\"$g_lan-{$subnets[$s]['name']}\"";
-                    }
-                }
-            }
-
-            // PPP Server
-            if( sizeof( $ppp_users ) || sizeof( $ppp_servers ) )
-            {
-                $html_config->put( "# PPP Server ({$subnets[$i]['name']})", 1 );
-                $html_config->put( $ppp_users, 1 );
-                $html_config->put( $ppp_servers, 1 );
-                $html_config->put ( '', 1 );
-            }
-
-            // PPP Client
-            if( sizeof( $ppp_clients ) || sizeof( $ppp_routes ) )
-            {
-                $html_config->put( "# PPP Client ({$subnets[$i]['name']})", 1 );
-                $html_config->put( $ppp_clients, 1 );
-                $html_config->put( $ppp_routes, 1 );
-                $html_config->put ( '', 1 );
-            }
-
-            // EOIP ADD
-            $eoip_interface = array();
-            $eoip_to_bridge = '';
-            $eoip_bridge_filter = '';
-            for( $s = 1; $s <= $subnum; $s++ )
-            {
-                if( $i != $s && ( !$g_sel || ( $g_sel && $g_sel == $s ) || ( $g_sel && $g_sel == $i ) ) )
-                {
-                    $eoip_name = "$g_lan-EoIP-{$subnets[$s]['name']}";
-                    $eoip_tunnel_id = $subnets[ min( $i, $s ) ]['eoip_mark'] + max( $i, $s ) - 2;
-
-                    $eoip_interface[] = "interface eoip add name=\"$eoip_name\" remote-address={$subnets[$s]['addr_vpn']} tunnel-id=$eoip_tunnel_id";
-                    $eoip_to_bridge[] = "interface bridge port add bridge=\"$g_lan\" interface=\"$eoip_name\" horizon=$g_horizon";
-                    $eoip_bridge_filter[] = "interface bridge nat add chain=dstnat in-interface=\"$eoip_name\" mac-protocol=ip ip-protocol=udp src-port=67-68 action=drop";
-                }
-            }
-
-            $html_config->put( "# EoIP ({$subnets[$i]['name']})", 1 );
-            $html_config->put( $eoip_interface, 1 );
-            $html_config->put( '', 1 );
-            
-            $html_config->put( "# EoIP to Bridge ({$subnets[$i]['name']})", 1 );
-            $html_config->put( $eoip_to_bridge, 1 );
-            $html_config->put ( '', 1 );
-            
-            $html_config->put( "# EoIP filter DHCP ({$subnets[$i]['name']})", 1 );
-            $html_config->put( $eoip_bridge_filter, 1 );
+            $html_config = self::get_config( $g_lan, $g_cidr, $g_vpn, $vpn_protocols, $g_horizon, $subnets, $subnum, $g_sel, $i );
 
             $html_setup->open( 'td', ' valign="top" align="right"' );
             $html_setup->open( 'div', ' class="textarea"' );
-            if( $raw && $raw == $i )
-            {
-                exit( $html_config->render() );
-            }
-            {
-                $html_setup->put( $html_config );
-            }
+            $html_setup->put( self::get_config( $g_lan, $g_cidr, $g_vpn, $vpn_protocols, $g_horizon, $subnets, $subnum, $g_sel, $i ), 1 );
             $html_setup->close();
             $html_setup->close();
             $html_setup->close();
         }
 
         return $html_setup;
+    }
+
+    private function get_config( $g_lan, $g_cidr, $g_vpn, $vpn_protocols, $g_horizon, $subnets, $subnum, $g_sel, $i )
+    {
+        $html_config = array();
+
+        // GATEWAY OR NEWBIE
+        if( !$g_sel || ( $g_sel && $g_sel == $i ) )
+        {
+            // GW
+            $html_config[] = "# GW ({$subnets[$i]['name']})";
+            $html_config[] = "interface bridge add name=\"$g_lan\"";
+            $html_config[] = "ip address add address={$subnets[$i]['addr_gw']}/$g_cidr interface=\"$g_lan\"";
+            $html_config[] = "ip route add dst-address={$subnets[0]['addr_subnet']}/24 type=unreachable distance=250";
+            $html_config[] = '';
+
+            // DHCP
+            $html_config[] = "# DHCP ({$subnets[$i]['name']})";
+            $html_config[] = "ip pool add ranges={$subnets[$i]['addr_dhcp_first']}-{$subnets[$i]['addr_dhcp_last']} name=\"{$subnets[$i]['dhcp_pool_name']}\"";
+            $html_config[] = "ip dhcp-server network add address={$subnets[$i]['addr_subnet']}/{$subnets[$i]['subnet_cidr']} gateway={$subnets[$i]['addr_gw']} dns-server={$subnets[$i]['addr_gw']}";
+            $html_config[] = "ip dhcp-server add name=\"{$subnets[$i]['dhcp_server_name']}\" interface=\"$g_lan\" address-pool=\"{$subnets[$i]['dhcp_pool_name']}\"";
+            $html_config[] = "ip dhcp-server enable \"{$subnets[$i]['dhcp_server_name']}\"";
+            $html_config[] = '';
+        }
+
+        // PPP PROFILE ADD
+        $ppp_profile_name = 'default-encryption';
+        $ppp_timeout = '17';
+
+        // PPP SECRET ADD
+        $ppp_users = array();
+        $ppp_servers = array();
+        $ppp_clients = array();
+        $ppp_routes = array();
+
+        for( $s = 1; $s <= $subnum; $s++ )
+        {
+            if( $i != $s && ( !$g_sel || ( $g_sel && $g_sel == $s ) || ( $g_sel && $g_sel == $i ) ) )
+            {
+                $is_client = false;
+                $is_server = false;
+
+                if( $subnets[$s]['is_pub'] )
+                {
+                    if( !$subnets[$i]['is_pub'] )
+                    {
+                        $is_client = true;
+                    }
+                    else
+                    {
+                        if( $subnets[$i]['dist'] > $subnets[$s]['dist'] || ( $subnets[$i]['dist'] == $subnets[$s]['dist'] && $i > $s ) )
+                        {
+                            $is_client = true;
+                        }
+                        else
+                        {
+                            $is_server = true;
+                        }
+                    }
+                }
+                else if( $subnets[$i]['is_pub'] )
+                {
+                    $is_server = true;
+                }
+
+                if( $is_client )
+                {
+                    $ppp_client_name = "$g_lan-$g_vpn-Client-{$subnets[$s]['name']}";
+                    $ppp_routes[] = "ip route add dst-address={$subnets[0]['addr_subnet']}/24 gateway=$ppp_client_name distance={$subnets[$s]['dist']}";
+                    $ppp_clients[] = "interface {$vpn_protocols[$g_vpn]}-client add connect-to=\"{$subnets[$s]['pub']}\" name=\"$ppp_client_name\" user=\"$g_lan-{$subnets[$i]['name']}\" password=\"{$subnets[$i]['psw']}\" profile=\"$ppp_profile_name\" keepalive-timeout=$ppp_timeout";
+                }
+                else if( $is_server )
+                {
+                    $ppp_server_name = "$g_lan-$g_vpn-Server-{$subnets[$s]['name']}";
+                    $ppp_users[] = "ppp secret add name=\"$g_lan-{$subnets[$s]['name']}\" password=\"{$subnets[$s]['psw']}\" profile=\"$ppp_profile_name\" local-address={$subnets[$i]['addr_vpn']} remote-address={$subnets[$s]['addr_vpn']} routes=\"{$subnets[0]['addr_subnet']}/24 {$subnets[$s]['addr_vpn']} {$subnets[$s]['dist']}\"";
+                    $ppp_servers[] = "interface {$vpn_protocols[$g_vpn]}-server add name=\"$ppp_server_name\" user=\"$g_lan-{$subnets[$s]['name']}\"";
+                }
+            }
+        }
+
+        // PPP Server
+        if( sizeof( $ppp_users ) || sizeof( $ppp_servers ) )
+        {
+            $html_config[] = "# PPP Server ({$subnets[$i]['name']})";
+            $html_config = array_merge( $html_config, $ppp_users );
+            $html_config =  array_merge( $html_config, $ppp_servers );
+            $html_config[] = '';
+        }
+
+        // PPP Client
+        if( sizeof( $ppp_clients ) || sizeof( $ppp_routes ) )
+        {
+            $html_config[] = "# PPP Client ({$subnets[$i]['name']})";
+            $html_config = array_merge( $html_config, $ppp_clients );
+            $html_config =  array_merge( $html_config, $ppp_routes );
+            $html_config[] = '';
+        }
+
+        // EOIP ADD
+        $eoip_interface = array();
+        $eoip_to_bridge = '';
+        $eoip_bridge_filter = '';
+        for( $s = 1; $s <= $subnum; $s++ )
+        {
+            if( $i != $s && ( !$g_sel || ( $g_sel && $g_sel == $s ) || ( $g_sel && $g_sel == $i ) ) )
+            {
+                $eoip_name = "$g_lan-EoIP-{$subnets[$s]['name']}";
+                $eoip_tunnel_id = $subnets[ min( $i, $s ) ]['eoip_mark'] + max( $i, $s ) - 2;
+
+                $eoip_interface[] = "interface eoip add name=\"$eoip_name\" remote-address={$subnets[$s]['addr_vpn']} tunnel-id=$eoip_tunnel_id";
+                $eoip_to_bridge[] = "interface bridge port add bridge=\"$g_lan\" interface=\"$eoip_name\" horizon=$g_horizon";
+                $eoip_bridge_filter[] = "interface bridge nat add chain=dstnat in-interface=\"$eoip_name\" mac-protocol=ip ip-protocol=udp src-port=67-68 action=drop";
+            }
+        }
+
+        $html_config[] = "# EoIP ({$subnets[$i]['name']})";
+        $html_config = array_merge( $html_config, $eoip_interface );
+        $html_config[] = '';
+
+        $html_config[] = "# EoIP to Bridge ({$subnets[$i]['name']})";
+        $html_config = array_merge( $html_config, $eoip_to_bridge );
+        $html_config[] = '';
+
+        $html_config[] = "# EoIP filter DHCP ({$subnets[$i]['name']})";
+        $html_config = array_merge( $html_config, $eoip_bridge_filter );
+
+        return $html_config;
     }
 }
 
