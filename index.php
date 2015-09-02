@@ -237,7 +237,7 @@ a
         $a = new secqru_app_tiklan( $w );
         $html->put( $a->html() );
     }
-    else
+    else if( $w->log )
     {
         $html->put( '<hr>' );
         $html->open( 'div', ' align="right"' );
@@ -249,7 +249,14 @@ a
 
     $html->put( '<hr>' );
     $html->open( 'div', ' style="text-align: right;"' );
-    $html->put( '<a href="https://github.com/deemru/secqru">github.com/deemru/secqru</a>' );
+    $html->put( '<a href="https://github.com/deemru/secqru">github.com/deemru/secqru</a>', 1 );
+
+    if( defined( 'SECQRU_INFORMER' ) )
+    {
+        $html->put( '', 1 );
+        $html->put( explode( PHP_EOL, sprintf( SECQRU_INFORMER, $color_back, $color_back, $is_lite ? '0' : '1' ) ) );
+    }
+
     echo $html->render();
 
     if( defined( 'SECQRU_DEBUG' ) && SECQRU_DEBUG )
