@@ -68,7 +68,7 @@ class secqru_app_tiklan
         // GLOBAL RANGE CALCULATION
         $g_rng = $g_rng & self::ipv4_pos( $g_cidr );
         $g_rng_end = $g_rng | self::ipv4_neg( $g_cidr ) - 1;
-        $g_horizon = abs( $g_rng % 99 ) + 1;
+        $g_horizon = ( ( $g_rng & 0x7FFFFFFF ) % 99 ) + 1;
 
         // GLOBAL RANGE CHANGED?
         if( !$this->w->get_set( 'g_rw' ) ||
@@ -288,145 +288,140 @@ class secqru_app_tiklan
         if( !$this->w->log && !$help )
             $this->w->log( 'no action', 7 );
 
-        $html_select = new secqru_html();
-        $html_select->open_select( 'g_sel' );
+        $html = new secqru_html();
 
-        // SELECTED STATION
-        for( $i = 0; $i <= $subnum; $i++ )
+        $html->put( '<hr>' );
+        $html->open( 'table' );
+        $html->open( 'tr' );
         {
-            $temp = $subnets[$i]['name'];
-            if( $i && strlen( $temp ) > self::formsize )
-                $temp = substr( $temp, 0, self::formsize - 3 ).'...' ;
+            $html->open( 'td', ' valign="top" align="left"' );
+            $html->open( 'div');
 
-            $html_select->put_option( $i, $temp, $g_sel == $i );
-        }
+            $html->put_input( 'g_lan', self::formsize, 50, $g_lan, 'bridge name' );
+            $html->add( ' — bridge name', 1 );
 
-        $html_select->close();
+            $html->put_input_hidden( 'g_rw', long2ip( $g_rng ) );
+            $html->put_input( 'g_rng', 15, 15, long2ip( $g_rng ), false );
+            $html->add( ' / ' );
+            $html->put_input( 'g_cidr', 2, 2, $g_cidr, false );
+            $html->add( ' — broadcast domain', 1 );
 
-        $html_vpn = new secqru_html();
-        $html_vpn->open_select( 'g_vpn' );
+            $html->put_input( 'subnum', 2, 2, $subnum );
+            $html->put_submit( 'netadd', '+' );
+            $html->put_submit( 'netsub', '-' );
+            $html->add( ' — router count', 1 );
 
-        foreach( $vpn_protocols as $key => $val )
-            $html_vpn->put_option( $key, $key, $g_vpn == $key );
+            $html->open_select( 'g_vpn' );
+            {
+                foreach( $vpn_protocols as $key => $val )
+                    $html->put_option( $key, $key, $g_vpn == $key );
+            }
+            $html->close();
 
-        $html_vpn->close();
+            $html->put_submit( 'save', 'v' );
+            $html->add( ' — VPN protocol', 1 );
 
-        $html_setup = new secqru_html();
+            $html->put_input( 'g_eoip', 5, 5, $g_eoip );
+            $html->add( ' — tunnel id seed', 1 );
 
-        $html_setup->put( '<hr>' );
-        $html_setup->open( 'table' );
-        $html_setup->open( 'tr' );
-        {
-            $html_setup->open( 'td', ' valign="top" align="left"' );
-            $html_setup->open( 'div');
+            $html->put_input_ro( self::formsize, long2ip( $g_rng + 1 ).' — '.long2ip( $g_rng_end ) );
+            $html->add( ' — address pool', 1 );
 
-            $html_setup->put_input( 'g_lan', self::formsize, 50, $g_lan, 'bridge name' );
-            $html_setup->add( ' — bridge name', 1 );
+            $html->put_input_ro( self::formsize, long2ip( $subnets[0]['subnet'] + 1 ).' — '.long2ip( $subnets[0]['subnet_end'] ) );
+            $html->add( ' — VPN pool', 1 );
 
-            $html_setup->put_input_hidden( 'g_rw', long2ip( $g_rng ) );
-            $html_setup->put_input( 'g_rng', 15, 15, long2ip( $g_rng ), false );
-            $html_setup->add( ' / ' );
-            $html_setup->put_input( 'g_cidr', 2, 2, $g_cidr, false );
-            $html_setup->add( ' — broadcast domain', 1 );
+            $html->put_input( 'g_psw', self::formsize, 50, $g_psw );
+            $html->add( ' — password seed', 1 );
 
-            $html_setup->put_input( 'subnum', 2, 2, $subnum );
-            $html_setup->put_submit( 'netadd', '+' );
-            $html_setup->put_submit( 'netsub', '-' );
-            $html_setup->add( ' — router count', 1 );
+            $html->open_select( 'g_sel' );
+            {
+                for( $i = 0; $i <= $subnum; $i++ )
+                {
+                    $temp = $subnets[$i]['name'];
+                    if( $i && strlen( $temp ) > self::formsize )
+                        $temp = substr( $temp, 0, self::formsize - 3 ).'...' ;
 
-            $html_setup->put( $html_vpn );
-            $html_setup->put_submit( 'save', 'v' );
-            $html_setup->add( ' — VPN protocol', 1 );
+                    $html->put_option( $i, $temp, $g_sel == $i );
+                }
+            }
+            $html->close();
 
-            $html_setup->put_input( 'g_eoip', 5, 5, $g_eoip );
-            $html_setup->add( ' — tunnel id seed', 1 );
-
-            $html_setup->put_input_ro( self::formsize, long2ip( $g_rng + 1 ).' — '.long2ip( $g_rng_end ) );
-            $html_setup->add( ' — address pool', 1 );
-
-            $html_setup->put_input_ro( self::formsize, long2ip( $subnets[0]['subnet'] + 1 ).' — '.long2ip( $subnets[0]['subnet_end'] ) );
-            $html_setup->add( ' — VPN pool', 1 );
-
-            $html_setup->put_input( 'g_psw', self::formsize, 50, $g_psw );
-            $html_setup->add( ' — password seed', 1 );
-
-            $html_setup->put( $html_select );
-            $html_setup->put_submit( 'save', 'v' );
-            $html_setup->add( ' — new router' );
-            $html_setup->close();
-            $html_setup->close();
+            $html->put_submit( 'save', 'v' );
+            $html->add( ' — new router' );
+            $html->close();
+            $html->close();
         }
         {
-            $html_setup->open( 'td', ' valign="top" align="right"' );
-            $html_setup->open( 'div', ' class="textarea"' );
-            $html_setup->put( $this->w->log, 1 );
-            $html_setup->put( $help, 1 );
+            $html->open( 'td', ' valign="top" align="right"' );
+            $html->open( 'div', ' class="textarea"' );
+            $html->put( $this->w->log, 1 );
+            $html->put( $help, 1 );
             if( !$raw )
             {
                 $raw_link = $this->w->get_raw_link();
                 if( $raw_link )
                 {
                     for( $i = 1; $i <= $subnum; $i++ )
-                        $html_setup->put( "# RAW: <a href=\"$raw_link$i\">{$subnets[$i]['name']}</a>", 1 );
+                        $html->put( "# RAW: <a href=\"$raw_link$i\">{$subnets[$i]['name']}</a>", 1 );
                 }
             }
-            $html_setup->close();
-            $html_setup->close();
+            $html->close();
+            $html->close();
         }
-        $html_setup->close();
+        $html->close();
 
         // SUBNET PARAMETERS
         for( $i = 1; $i <= $subnum; $i++ )
         {
-            $html_setup->open( 'tr' );
-            $html_setup->open( 'td', ' colspan="2"' );
-            $html_setup->put( '<hr>' );
-            $html_setup->close();
-            $html_setup->close();
+            $html->open( 'tr' );
+            $html->open( 'td', ' colspan="2"' );
+            $html->put( '<hr>' );
+            $html->close();
+            $html->close();
 
-            $html_setup->open( 'tr');
-            $html_setup->open( 'td', ' valign="top"' );
-            $html_setup->open( 'div' );
+            $html->open( 'tr');
+            $html->open( 'td', ' valign="top"' );
+            $html->open( 'div' );
             {
-                $html_setup->input_full( 'text', "name$i", self::formsize, 50, $subnets[$i]['name'], $subnets[$i]['name_ok'] ? '' : 'e' );
-                $html_setup->add( ' — router name', 1 );
+                $html->input_full( 'text', "name$i", self::formsize, 50, $subnets[$i]['name'], $subnets[$i]['name_ok'] ? '' : 'e' );
+                $html->add( ' — router name', 1 );
 
-                $html_setup->put_input_hidden( "is_pub$i", $subnets[$i]['is_pub'] ? '1' : '0' );
-                $html_setup->input_full( 'text', "pub$i", self::formsize, 50, $subnets[$i]['pub'], $subnets[$i]['is_pub'] ? ( $subnets[$i]['pub_ok'] ? '' : 'e' ) : ( $nopublic ? 'e' : 'r' ) );
-                $html_setup->put_submit( "sw_pub$i", $subnets[$i]['is_pub'] ? 'x' : 'v' );
-                $html_setup->add( ' — public address', 1 );
+                $html->put_input_hidden( "is_pub$i", $subnets[$i]['is_pub'] ? '1' : '0' );
+                $html->input_full( 'text', "pub$i", self::formsize, 50, $subnets[$i]['pub'], $subnets[$i]['is_pub'] ? ( $subnets[$i]['pub_ok'] ? '' : 'e' ) : ( $nopublic ? 'e' : 'r' ) );
+                $html->put_submit( "sw_pub$i", $subnets[$i]['is_pub'] ? 'x' : 'v' );
+                $html->add( ' — public address', 1 );
 
-                $html_setup->put_input( "dist$i", 3, 3, $subnets[$i]['dist'] );
-                $html_setup->add( ' — router distance', 1 );
+                $html->put_input( "dist$i", 3, 3, $subnets[$i]['dist'] );
+                $html->add( ' — router distance', 1 );
 
-                $html_setup->input_full( 'text', "subnet$i", 15, 15, long2ip( $subnets[$i]['subnet'] ), $subnets[$i]['subnet_ok'] ? '' : 'e' );
-                $html_setup->add( ' / ' );
-                $html_setup->input_full( 'text', 0, 2, 0, $subnets[$i]['subnet_cidr'], 'r', 0 );
-                $html_setup->add( ' — local range', 1 );
+                $html->input_full( 'text', "subnet$i", 15, 15, long2ip( $subnets[$i]['subnet'] ), $subnets[$i]['subnet_ok'] ? '' : 'e' );
+                $html->add( ' / ' );
+                $html->input_full( 'text', 0, 2, 0, $subnets[$i]['subnet_cidr'], 'r', 0 );
+                $html->add( ' — local range', 1 );
 
-                $html_setup->input_full( 'text', 0, 15, 0, $subnets[$i]['addr_gw'], 'r' );
-                $html_setup->add( ' — LAN address', 1 );
+                $html->input_full( 'text', 0, 15, 0, $subnets[$i]['addr_gw'], 'r' );
+                $html->add( ' — LAN address', 1 );
 
-                $html_setup->input_full( 'text', 0, 15, 0, $subnets[$i]['addr_vpn'], 'r' );
-                $html_setup->add( ' — VPN address', 1 );
+                $html->input_full( 'text', 0, 15, 0, $subnets[$i]['addr_vpn'], 'r' );
+                $html->add( ' — VPN address', 1 );
 
-                $html_setup->input_full( 'text', 0, self::formsize, 0, "{$subnets[$i]['addr_dhcp_first']} - {$subnets[$i]['addr_dhcp_last']}", 'r' );
-                $html_setup->add( ' — DHCP pool', 1 );
+                $html->input_full( 'text', 0, self::formsize, 0, "{$subnets[$i]['addr_dhcp_first']} - {$subnets[$i]['addr_dhcp_last']}", 'r' );
+                $html->add( ' — DHCP pool', 1 );
             }
-            $html_setup->close();
-            $html_setup->close();
+            $html->close();
+            $html->close();
 
             $html_config = self::get_config( $g_lan, $g_cidr, $g_vpn, $vpn_protocols, $g_horizon, $subnets, $subnum, $g_sel, $i );
 
-            $html_setup->open( 'td', ' valign="top" align="right"' );
-            $html_setup->open( 'div', ' class="textarea"' );
-            $html_setup->put( self::get_config( $g_lan, $g_cidr, $g_vpn, $vpn_protocols, $g_horizon, $subnets, $subnum, $g_sel, $i ), 1 );
-            $html_setup->close();
-            $html_setup->close();
-            $html_setup->close();
+            $html->open( 'td', ' valign="top" align="right"' );
+            $html->open( 'div', ' class="textarea"' );
+            $html->put( self::get_config( $g_lan, $g_cidr, $g_vpn, $vpn_protocols, $g_horizon, $subnets, $subnum, $g_sel, $i ), 1 );
+            $html->close();
+            $html->close();
+            $html->close();
         }
 
-        return $html_setup;
+        return $html;
     }
 
     private function get_config( $g_lan, $g_cidr, $g_vpn, $vpn_protocols, $g_horizon, $subnets, $subnum, $g_sel, $i )
