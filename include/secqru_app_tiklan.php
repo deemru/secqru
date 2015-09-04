@@ -5,6 +5,7 @@ class secqru_app_tiklan
     private $w;
 
     const formsize = 33;
+    const max_routers = 64;
 
     function __construct( &$w )
     {
@@ -55,7 +56,7 @@ class secqru_app_tiklan
             $temp--;
             $this->w->log( 'routers--', 7 );
         }
-        $subnum = $this->w->get_int( 'subnum:router count', 3, 2, 64, $temp );
+        $subnum = $this->w->get_int( 'subnum:router count', 3, 2, self::max_routers, $temp );
 
         // SUBNET COUNTER CORRECTION BY CIDR (MASK)
         $temp = floor( self::ipv4_neg( $g_cidr ) / 256 );
@@ -68,7 +69,7 @@ class secqru_app_tiklan
         // GLOBAL RANGE CALCULATION
         $g_rng = $g_rng & self::ipv4_pos( $g_cidr );
         $g_rng_end = $g_rng | self::ipv4_neg( $g_cidr ) - 1;
-        $g_horizon = ( ( $g_rng & 0x7FFFFFFF ) % 99 ) + 1;
+        $g_horizon = ( ( $g_rng & 0x7FFFFFFF ) % 97 ) + 1;
 
         // GLOBAL RANGE CHANGED?
         if( !$this->w->get_set( 'g_rw' ) ||
@@ -87,8 +88,8 @@ class secqru_app_tiklan
         }
 
         // GLOBAL EOIP TUNNEL ID SEED
-        $g_eoip = $g_rng >> 8 & 0xFFFF;
-        $g_eoip = $this->w->get_int( 'g_eoip:tunnel id seed', $g_eoip, 0, 62000 );
+        $g_eoip = ( $g_rng & 0x7FFFFFFF ) % 60000;
+        $g_eoip = $this->w->get_int( 'g_eoip:tunnel id seed', $g_eoip, 0, 60000 );
 
         // GLOBAL VPN
         $g_vpn = $this->w->get_dns( 'g_vpn:VPN protocol', 'L2TP' );
@@ -156,7 +157,7 @@ class secqru_app_tiklan
         for( $i = 1; $i <= $subnum; $i++ )
         {
             $subnets[$i]['eoip_mark'] = $temp + $i;
-            $temp += $subnum - $i - 2;
+            $temp += self::max_routers - $i - 2;
         }
 
         // NEW STATION SELECTED?
