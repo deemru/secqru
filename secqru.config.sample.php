@@ -17,6 +17,7 @@
     define( 'SECQRU_APPLOG', './var/log/%s.log' );
     define( 'SECQRU_LOCKIP', './var/lock/' );
 
+    define( 'SECQRU_GITHEAD', 1 );
     define( 'SECQRU_INFORMER', '<!-- Yandex.Metrika informer -->
 <a href="https://metrika.yandex.ru/stat/?id=32274279&amp;from=informer"
 target="_blank" rel="nofollow"><img src="https://informer.yandex.ru/informer/32274279/3_0_%sFF_%sFF_%s_pageviews"

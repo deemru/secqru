@@ -247,12 +247,22 @@ a
         $html->close();
     }
 
+    $html->close();
+
     $html->put( '<hr>' );
     $html->open( 'div', ' style="text-align: right;"' );
-    $html->put( '<a href="https://github.com/deemru/secqru">github.com/deemru/secqru</a>', 1 );
+
+    $html->put( '<a href="https://github.com/deemru/secqru">github/deemru/secqru</a>' );
+
+    if( defined( 'SECQRU_GITHEAD' ) )
+    {
+        $temp = trim( file_get_contents( '.git/ORIG_HEAD' ) );
+        $html->add( "/<a href=\"https://github.com/deemru/secqru/commit/$temp\">".substr( $temp, 0, 7 ).'</a>' );
+    }
 
     if( defined( 'SECQRU_INFORMER' ) )
     {
+        $html->add( '', 1 );
         $html->put( '', 1 );
         $html->put( explode( PHP_EOL, sprintf( SECQRU_INFORMER, $color_back, $color_back, $is_lite ? '0' : '1' ) ) );
     }
