@@ -256,7 +256,7 @@ a
 
     if( defined( 'SECQRU_GITHEAD' ) )
     {
-        $temp = trim( file_get_contents( '.git/FETCH_HEAD' ) );
+        $temp = file_get_contents( '.git/FETCH_HEAD', NULL, NULL, 0, 40 );
         $html->add( "/<a href=\"https://github.com/deemru/secqru/commit/$temp\">".substr( $temp, 0, 7 ).'</a>' );
     }
 
