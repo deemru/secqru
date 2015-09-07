@@ -270,20 +270,24 @@ class secqru_app_tiklan
             $this->w->log( 'save', 7 );
 
         // DISPLAY HELP / RESET/ LOG
-        $help = array();
         if( $this->w->get_set( 'help' ) )
         {
-            $help = '# HELP:
-* This web application helps you to setup, maintain and expand a single broadcast domain between your routers.
-* It needs at least 2 routers with at least 1 public ip address on one of them.
-* Setup appropriate parameters on the left side, then use corresponding generated scripts.
-* The final result is "'.$g_lan.'" bridge, which represents your single broadcast domain.
-* Test this bridge with ping and stuff, if everything is fine add ports to it and enjoy.
-* Do not forget to save your configuration with "link" button so you can easily add more routers later.
+            $help = explode( PHP_EOL, '# HELP:
 
-* Have a question? Found a bug? Have an improvement idea? Contact — deem@deem.ru';
-            $help = explode( '
-', $help );
+* <a href="https://github.com/deemru/secqru/wiki/tiklan">Tiklan</a> is available on github
+
+* This app makes broadcast domains between Mikrotik routers
+* Minimum requirements: 2 routers + 1 public ip address
+* You can use a default configuration from scratch
+* Just correct public ip addresses
+* In the end you get "'.$g_lan.'" bridge
+* Test it, add ports, enjoy!
+
+* Contact — deem@deem.ru' );
+        }
+        else
+        {
+            $help = 0;
         }
 
         if( !$this->w->log && !$help )
@@ -356,12 +360,16 @@ class secqru_app_tiklan
             $html->open( 'td', ' valign="top" align="right"' );
             $html->open( 'div', ' class="textarea"' );
             $html->put( $this->w->log, 1 );
-            $html->put( $help, 1 );
+
+            if( $help )
+                $html->put( $help, 1 );
+
             if( !$raw )
             {
                 $raw_link = $this->w->get_raw_link();
                 if( $raw_link )
                 {
+                    $html->put( '', 1 );
                     for( $i = 1; $i <= $subnum; $i++ )
                         $html->put( "# RAW: <a href=\"$raw_link$i\">{$subnets[$i]['name']}</a>", 1 );
                 }
