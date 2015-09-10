@@ -6,7 +6,7 @@
     {
         require_once( 'include/secqru_flock.php' );
 
-        $ip_lock = new secqru_flock( SECQRU_LOCKIP.$_SERVER['REMOTE_ADDR'] );
+        $ip_lock = new secqru_flock( SECQRU_LOCKIP.$_SERVER['REMOTE_ADDR'].'.lock' );
         if( !$ip_lock->open() )
         {
             header( 'Status: 503 Service Temporarily Unavailable' );
