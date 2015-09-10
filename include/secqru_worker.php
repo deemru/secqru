@@ -11,7 +11,7 @@ class secqru_worker
 
     public function log( $message, $level = 0 )
     {
-        if( defined( 'SECQRU_DEBUG' ) && SECQRU_DEBUG )
+        if( defined( 'SECQRU_DEBUG' ) )
         {
             $dbg = debug_backtrace();
             $log_string = ' (';
@@ -61,8 +61,11 @@ class secqru_worker
 
     function get_app( $apps )
     {
-        if( !isset( $this->url[0] ) )
+        if( !isset( $apps[$this->url[0]] ) )
+        {
+            header( $_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found' );
             exit( self::log( 'unknown app', 3 ) );
+        }
 
         return $this->url[0];
     }

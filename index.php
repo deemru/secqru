@@ -70,13 +70,13 @@
     if( $w->get_set( 'sw_light' ) )
     {
         $is_lite = 1;
-        setcookie( 'gamma', 1 );
+        setcookie( 'gamma', 1, 0x7FFFFFFF );
         $w->log( 'switch to light', 7 );
     }
     else if( $w->get_set( 'sw_night' ) )
     {
         $is_lite = 0;
-        setcookie( 'gamma', 0 );
+        setcookie( 'gamma', 0, 0x7FFFFFFF );
         $w->log( 'switch to night', 7 );
     }
     else
@@ -269,7 +269,7 @@ a
 
     echo $html->render();
 
-    if( defined( 'SECQRU_DEBUG' ) && SECQRU_DEBUG )
+    if( defined( 'SECQRU_DEBUG' ) )
         echo '<center><small>'.sprintf( 'Memory: %.02f KB', memory_get_peak_usage()/1024 ).'<br>'.sprintf( 'Speed: %.01f ms', 1000 * ( microtime( TRUE ) - $_SERVER['REQUEST_TIME_FLOAT'] ) ).'</small></center>';
 
 ?>

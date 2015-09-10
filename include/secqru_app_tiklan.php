@@ -270,7 +270,7 @@ class secqru_app_tiklan
             $this->w->log( 'save', 7 );
 
         // DISPLAY HELP / RESET/ LOG
-        if( $this->w->get_set( 'help' ) )
+        if( $this->w->get_set( 'help' ) || !$this->w->log )
         {
             $help = explode( PHP_EOL, '# HELP:
 
@@ -289,9 +289,6 @@ class secqru_app_tiklan
         {
             $help = 0;
         }
-
-        if( !$this->w->log && !$help )
-            $this->w->log( 'no action', 7 );
 
         $html = new secqru_html();
 
@@ -358,23 +355,29 @@ class secqru_app_tiklan
         }
         {
             $html->open( 'td', ' valign="top" align="right"' );
-            $html->open( 'div', ' class="textarea"' );
-            $html->put( $this->w->log, 1 );
 
-            if( $help )
-                $html->put( $help, 1 );
-
-            if( !$raw )
+            if( $this->w->log || $help )
             {
-                $raw_link = $this->w->get_raw_link();
-                if( $raw_link )
+                $html->open( 'div', ' class="textarea"' );
+
+                if( $this->w->log )
+                    $html->put( $this->w->log, 1 );
+
+                if( $help )
+                    $html->put( $help, 1 );
+
+                if( !$raw )
                 {
-                    $html->put( '', 1 );
-                    for( $i = 1; $i <= $subnum; $i++ )
-                        $html->put( "# RAW: <a href=\"$raw_link$i\">{$subnets[$i]['name']}</a>", 1 );
+                    $raw_link = $this->w->get_raw_link();
+                    if( $raw_link )
+                    {
+                        $html->put( '', 1 );
+                        for( $i = 1; $i <= $subnum; $i++ )
+                            $html->put( "# RAW: <a href=\"$raw_link$i\">{$subnets[$i]['name']}</a>", 1 );
+                    }
                 }
+                $html->close();
             }
-            $html->close();
             $html->close();
         }
         $html->close();
