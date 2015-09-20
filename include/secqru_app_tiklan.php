@@ -262,6 +262,7 @@ class secqru_app_tiklan
 
             foreach( $router_config as $line )
                 echo $line.PHP_EOL;
+            echo ' ';
 
             exit;
         }
@@ -445,7 +446,7 @@ class secqru_app_tiklan
         {
             // GW
             $html_config[] = "# GW ({$subnets[$i]['name']})";
-            $html_config[] = "interface bridge add name=\"$g_lan\" comment=\"$g_lan\"";
+            $html_config[] = "interface bridge add name=\"$g_lan\" comment=\"$g_lan\" protocol-mode=none";
             $html_config[] = "ip address add address={$subnets[$i]['addr_gw']}/$g_cidr interface=\"$g_lan\"";
             $html_config[] = "ip route add dst-address={$subnets[0]['addr_subnet']}/24 type=unreachable distance=250";
             $html_config[] = '';
@@ -504,12 +505,14 @@ class secqru_app_tiklan
                     $ppp_client_name = "$g_lan-$g_vpn-Client-{$subnets[$s]['name']}";
                     $ppp_routes[] = "ip route add dst-address={$subnets[0]['addr_subnet']}/24 gateway=$ppp_client_name distance={$subnets[$s]['dist']}";
                     $ppp_clients[] = "interface {$vpn_protocols[$g_vpn]}-client add connect-to=\"{$subnets[$s]['pub']}\" name=\"$ppp_client_name\" user=\"$g_lan-{$subnets[$i]['name']}\" password=\"{$subnets[$i]['psw']}\" profile=\"$ppp_profile_name\" keepalive-timeout=$ppp_timeout disabled=no";
+                    $ppp_clients[] = "ip neighbor discovery set \"$ppp_client_name\" discover=no";
                 }
                 else if( $is_server )
                 {
                     $ppp_server_name = "$g_lan-$g_vpn-Server-{$subnets[$s]['name']}";
                     $ppp_users[] = "ppp secret add name=\"$g_lan-{$subnets[$s]['name']}\" password=\"{$subnets[$s]['psw']}\" profile=\"$ppp_profile_name\" local-address={$subnets[$i]['addr_vpn']} remote-address={$subnets[$s]['addr_vpn']} routes=\"{$subnets[0]['addr_subnet']}/24 {$subnets[$s]['addr_vpn']} {$subnets[$s]['dist']}\"";
                     $ppp_servers[] = "interface {$vpn_protocols[$g_vpn]}-server add name=\"$ppp_server_name\" user=\"$g_lan-{$subnets[$s]['name']}\"";
+                    $ppp_servers[] = "ip neighbor discovery set \"$ppp_server_name\" discover=no";
                 }
             }
         }
@@ -545,6 +548,7 @@ class secqru_app_tiklan
                 $eoip_tunnel_id = $subnets[ min( $i, $s ) ]['eoip_mark'] + max( $i, $s ) - 2;
 
                 $eoip_interface[] = "interface eoip add name=\"$eoip_name\" remote-address={$subnets[$s]['addr_vpn']} tunnel-id=$eoip_tunnel_id keepalive=7,3";
+                $eoip_interface[] = "ip neighbor discovery set \"$eoip_name\" discover=no";
                 $eoip_to_bridge[] = "interface bridge port add bridge=\"$g_lan\" interface=\"$eoip_name\" horizon=$g_horizon";
                 $eoip_bridge_filter[] = "interface bridge nat add chain=dstnat in-interface=\"$eoip_name\" mac-protocol=ip ip-protocol=udp src-port=67-68 action=drop";
             }
