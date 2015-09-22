@@ -1,1 +1,2 @@
-# secq.ru — var — log
+# secq.ru / var / log
+The place for logs
