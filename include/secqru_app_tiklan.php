@@ -454,7 +454,7 @@ class secqru_app_tiklan
             // DHCP
             $html_config[] = "# DHCP ({$subnets[$i]['name']})";
             $html_config[] = "ip pool add ranges={$subnets[$i]['addr_dhcp_first']}-{$subnets[$i]['addr_dhcp_last']} name=\"{$subnets[$i]['dhcp_pool_name']}\"";
-            $html_config[] = "ip dhcp-server network add address={$subnets[$i]['addr_subnet']}/{$subnets[$i]['subnet_cidr']} gateway={$subnets[$i]['addr_gw']} dns-server={$subnets[$i]['addr_gw']}";
+            $html_config[] = "ip dhcp-server network add address={$subnets[$i]['addr_subnet']}/$g_cidr gateway={$subnets[$i]['addr_gw']} dns-server={$subnets[$i]['addr_gw']}";
             $html_config[] = "ip dhcp-server add name=\"{$subnets[$i]['dhcp_server_name']}\" interface=\"$g_lan\" address-pool=\"{$subnets[$i]['dhcp_pool_name']}\"";
             $html_config[] = "ip dhcp-server enable \"{$subnets[$i]['dhcp_server_name']}\"";
             $html_config[] = '';
