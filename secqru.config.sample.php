@@ -11,6 +11,7 @@
     date_default_timezone_set( 'Europe/Moscow' );
     mb_internal_encoding( 'UTF-8' );
 
+    /*
     define( 'SECQRU_DEBUG', 1 );
     define( 'SECQRU_ERRORLOG', './var/log/_error.log' );
     define( 'SECQRU_ACCESSLOG', './var/log/access.log' );
@@ -54,5 +55,5 @@ style="width:88px; height:31px; border:0;" onclick="try{Ya.Metrika.informer({i:t
 </script>
 <noscript><div><img src="https://mc.yandex.ru/watch/32274279?ut=noindex" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 <!-- /Yandex.Metrika counter -->' );
-
+    */
 ?>
