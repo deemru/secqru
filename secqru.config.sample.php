@@ -3,6 +3,7 @@
     define( 'SECQRU_ROOT', '/secqru/' );
     define( 'SECQRU_SITE', 'secq.ru' );
     define( 'SECQRU_PASS', 'password' );
+    define( 'SECQRU_EOL', "\n" );
 
     define( 'SECQRU_ADDR', 'http' .
     ( ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] == 'on' ) ? 's' : '' ) .

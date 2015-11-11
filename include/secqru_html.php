@@ -6,18 +6,23 @@ class secqru_html
     private $tags = array();
     private $lvl = 0;
 
-    const EOL = PHP_EOL;
     const TAB = '    ';
 
     public function render()
     {
         while( self::close() ){}
 
+        $render = '';
+
         foreach( $this->html as $pair )
-            if( isset( $render ) )
-                $render .= self::EOL.str_repeat( self::TAB, $pair[0] ).$pair[1];
+        {
+            if( strlen( $pair[1] ) )
+                $line = str_repeat( self::TAB, $pair[0] ).$pair[1].PHP_EOL;
             else
-                $render = str_repeat( self::TAB, $pair[0] ).$pair[1];
+                $line = PHP_EOL;
+
+            $render .= $line;
+        }
 
         return $render;
     }

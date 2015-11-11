@@ -193,7 +193,7 @@ a
 
     // STYLE
     $html->open( 'style', ' type="text/css"' );
-    $html->put( explode( PHP_EOL, $style ) );
+    $html->put( explode( SECQRU_EOL, $style ) );
     $html->close();
     $html->close();
 
@@ -264,7 +264,7 @@ a
     {
         $html->add( '', 1 );
         $html->put( '', 1 );
-        $html->put( explode( PHP_EOL, sprintf( SECQRU_INFORMER, $color_back, $color_back, $is_lite ? '0' : '1' ) ) );
+        $html->put( explode( SECQRU_EOL, sprintf( SECQRU_INFORMER, $color_back, $color_back, $is_lite ? '0' : '1' ) ) );
     }
 
     echo $html->render();

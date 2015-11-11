@@ -269,7 +269,7 @@ class secqru_app_tiklan
         // DISPLAY HELP / RESET/ LOG
         if( $this->w->get_set( 'help' ) || !$this->w->log )
         {
-            $help = explode( PHP_EOL, '# HELP:
+            $help = explode( SECQRU_EOL, '# HELP:
 
 * <a href="https://github.com/deemru/secqru/wiki/tiklan">Tiklan</a> is available on github
 
