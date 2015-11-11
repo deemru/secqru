@@ -38,7 +38,7 @@
 
     $w->init_url( SECQRU_ROOT );
 
-    $apps = array( 
+    $apps = array(
         '' => '',
         'tiklan' => 'include/secqru_app_tiklan.php'
     );
@@ -93,7 +93,7 @@
     $color_back = $is_lite ? 'E0E0D0' : '404840';
     $color_lite = $is_lite ? 'FFFFFF' : 'A0A8B0';
     $color_txt1 = $is_lite ? '202010' : 'A0A8B0';
-    $color_txt2 = $is_lite ? '202010' : '101820';  
+    $color_txt2 = $is_lite ? '202010' : '101820';
     $color_bord = $is_lite ? 'B0B0A0' : '606870';
     $color_link = $is_lite ? '606050' : '808890';
     $style_font_fixed = 'font-size: 12pt; font-family: "Courier New", Courier, monospace;';

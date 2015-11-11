@@ -7,7 +7,7 @@ class secqru_flock
     private $delay;
     private $timeout;
 
-    function __construct( $filename,
+    public function __construct( $filename,
                           $delay = 100000 /* 0.1 sec */,
                           $timeout = 1000000 /* 1 sec */ )
     {
@@ -17,12 +17,12 @@ class secqru_flock
         $this->timeout = $timeout;
     }
 
-    function __destruct()
+    public function __destruct()
     {
         self::close();
     }
 
-    function open( $access = 'a+' )
+    public function open( $access = 'a+' )
     {
         self::close();
 
@@ -45,7 +45,7 @@ class secqru_flock
         return 0;
     }
 
-    function close()
+    public function close()
     {
         if( $this->fp )
         {
@@ -55,7 +55,7 @@ class secqru_flock
         }
     }
 
-    function append( $data )
+    public function append( $data )
     {
         self::close();
 
