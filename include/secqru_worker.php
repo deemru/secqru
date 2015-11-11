@@ -17,7 +17,7 @@ class secqru_worker
         {
             $dbg = debug_backtrace();
             $log_string = ' (';
-            for( $i = 0; $i < sizeof( $dbg ); $i++ )
+            for( $i = 0, $n = sizeof( $dbg ); $i < $n; $i++ )
             {
                 if( $i > 0 )
                     $log_string .= ' > ';

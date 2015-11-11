@@ -44,7 +44,7 @@ class secqru_cryptex
 
     private function cbc( $iv, $key, $data, $encrypt )
     {
-        for( $i = 0; $i < strlen( $data ); $i++ )
+        for( $i = 0, $n = strlen( $data ); $i < $n; $i++ )
         {
             if( ( $i % $this->cbcsz ) == 0 )
             {
