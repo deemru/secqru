@@ -124,7 +124,7 @@ class secqru_html
         $this->html[ sizeof( $this->html ) - 1 ][1] .= $value.$br;
     }
 
-    public function close( $is_put = true )
+    public function close()
     {
         if( $this->lvl == 0 )
             return false;
