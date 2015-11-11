@@ -7,16 +7,17 @@ class secqru_cryptex
     private $macsz;
     private $rndsz;
     private $cbcsz;
-    private $ipmix;
+    private $hash;
 
-    public function __construct( $psw, $mix = 0, $ivsz = 4, $macsz = 4,
-                                 $rndsz = 2, $cbcsz = 32 )
+    public function __construct( $psw, $ivsz = 4, $macsz = 4, $rndsz = 2,
+                                 $hash = 'gost', $cbcsz = 32 )
     {
         $this->psw = $psw;
         $this->ivsz = $ivsz;
         $this->macsz = $macsz;
+        $this->rndsz = $rndsz;
         $this->cbcsz = $cbcsz;
-        $this->ipmix = $mix ? $_SERVER['REMOTE_ADDR'] : '';
+        $this->hash = $hash;
     }
 
     public function rnd( $size = 8, $rndsz = 1 )
@@ -38,7 +39,7 @@ class secqru_cryptex
 
     private function hash( $data )
     {
-        return hash( 'gost', $data, true );
+        return hash( $this->hash, $data, true );
     }
 
     private function cbc( $iv, $key, $data, $encrypt )
@@ -64,15 +65,15 @@ class secqru_cryptex
 
     private function key( $iv )
     {
-        return self::hash( $this->psw . $iv . $this->ipmix );
+        return self::hash( $this->psw . $iv );
     }
 
     public function cryptex( $data )
     {
         $data = gzdeflate( $data, 9 );
-        $iv = $this->ivsz ? self::rnd( $this->ivsz, 2 ) : ''; // inner iv
+        $iv = $this->ivsz ? self::rnd( $this->ivsz, $this->rndsz ) : ''; // iiv
         $data = $iv . $data;
-        $iv = $this->ivsz ? self::rnd( $this->ivsz, 2 ) : ''; // outer iv
+        $iv = $this->ivsz ? self::rnd( $this->ivsz, $this->rndsz ) : ''; // oiv
         $key = self::key( $iv );
         $mac = substr( self::hash( $key . $data ), -$this->macsz );
         $data = self::cbc( $iv . $mac, $key, $data, TRUE );
