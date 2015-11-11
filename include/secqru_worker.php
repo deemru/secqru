@@ -271,6 +271,7 @@ class secqru_worker
     public function get_ip2long( $name, $default ) { return $this->get_val( $name, $default, 2 ); }
     public function get_set( $name ) { return isset( $_POST[$name] ); }
     public function clear( $name ) { if( isset( $_POST[$name] ) ) unset( $_POST[$name] ); }
+    public function reset(){ unset( $_POST ); }
 }
 
 ?>

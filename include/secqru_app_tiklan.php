@@ -27,7 +27,7 @@ class secqru_app_tiklan
         // RESET
         if( $this->w->get_set( 'reset' ) )
         {
-            unset( $_POST );
+            $this->w->reset();
             $this->w->log( 'reset to defaults', 7 );
         }
 
