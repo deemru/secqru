@@ -2,11 +2,10 @@
 
 class secqru_html
 {
-    private $html = array();
+    private $strs = array();
+    private $tabs = array();
     private $tags = array();
     private $lvl = 0;
-
-    const TAB = '    ';
 
     public function render()
     {
@@ -14,14 +13,12 @@ class secqru_html
 
         $render = '';
 
-        foreach( $this->html as $pair )
+        for( $i = 0, $n = sizeof( $this->strs ); $i < $n; $i++ )
         {
-            if( strlen( $pair[1] ) )
-                $line = str_repeat( self::TAB, $pair[0] ).$pair[1].PHP_EOL;
-            else
-                $line = PHP_EOL;
+            if( strlen( $this->strs[$i] ) )
+                $render .= str_repeat( '    ', $this->tabs[$i] ).$this->strs[$i];
 
-            $render .= $line;
+            $render .= PHP_EOL;
         }
 
         return $render;
@@ -31,15 +28,16 @@ class secqru_html
     {
         $rows = 0;
 
-        foreach( $this->html as $pair )
-            $rows += floor( strlen( $pair[1] ) / $maxline ) + 1;
+        for( $i = 0, $n = sizeof( $this->strs ); $i < $n; $i++ )
+            $rows += floor( strlen( $this->strs[$i] ) / $maxline ) + 1;
 
         return $rows;
     }
 
     public function open( $tag, $options = '' )
     {
-        $this->html[] = array( $this->lvl, "<$tag$options>" );
+        $this->strs[] = "<$tag$options>";
+        $this->tabs[] = $this->lvl;
         $this->tags[$this->lvl] = $tag;
         $this->lvl++;
     }
@@ -109,24 +107,33 @@ class secqru_html
     {
         $br = $br ? '<br>' : '';
 
-        if( isset( $value->html ) )
+        if( is_a( $value, get_class() ) )
         {
             while( $value->close() ){}
-            foreach( $value->html as $data )
-                $this->html[] = array( $this->lvl + $data[0], $data[1] );
+            for( $i = 0, $n = sizeof( $value->strs ); $i < $n; $i++ )
+            {
+                $this->strs[] = $value->strs[$i];
+                $this->tabs[] = $value->tabs[$i] + $this->lvl;
+            }
         }
         else if( is_array( $value ) )
             foreach( $value as $data )
-                $this->html[] = array( $this->lvl, $data.$br );
+            {
+                $this->strs[] = $data.$br;
+                $this->tabs[] = $this->lvl;
+            }
         else
-            $this->html[] = array( $this->lvl, $value.$br );
+        {
+            $this->strs[] = $value.$br;
+            $this->tabs[] = $this->lvl;
+        }
     }
 
     public function add( $value, $br = false )
     {
         $br = $br ? '<br>' : '';
 
-        $this->html[ sizeof( $this->html ) - 1 ][1] .= $value.$br;
+        $this->strs[ sizeof( $this->strs ) - 1 ] .= $value.$br;
     }
 
     public function close()
@@ -134,7 +141,9 @@ class secqru_html
         if( $this->lvl == 0 )
             return false;
 
-        $this->html[] = array( --$this->lvl, "</{$this->tags[$this->lvl]}>" );
+        $this->lvl--;
+        $this->strs[] = "</{$this->tags[$this->lvl]}>";
+        $this->tabs[] = $this->lvl;
         return true;
     }
 }
