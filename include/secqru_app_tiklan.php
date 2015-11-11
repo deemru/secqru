@@ -316,8 +316,8 @@ class secqru_app_tiklan
 
             $html->open_select( 'g_vpn' );
             {
-                foreach( $vpn_protocols as $key => $val )
-                    $html->put_option( $key, $key, $g_vpn == $key );
+                foreach( array_keys( $vpn_protocols ) as $temp )
+                    $html->put_option( $temp, $temp, $g_vpn == $temp );
             }
             $html->close();
 
@@ -423,8 +423,6 @@ class secqru_app_tiklan
             }
             $html->close();
             $html->close();
-
-            $html_config = self::get_config( $g_lan, $g_cidr, $g_vpn, $vpn_protocols, $g_horizon, $subnets, $subnum, $g_sel, $i );
 
             $html->open( 'td', ' valign="top" align="right"' );
             $html->open( 'div', ' class="textarea"' );
