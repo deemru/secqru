@@ -11,6 +11,8 @@ class secqru_worker
 
     public function log( $message, $level = 0 )
     {
+        $log_string = '';
+
         if( defined( 'SECQRU_DEBUG' ) )
         {
             $dbg = debug_backtrace();
@@ -23,10 +25,6 @@ class secqru_worker
                 $log_string .= $file.':'.$dbg[$i]['line'];
             }
             $log_string .= ')';
-        }
-        else
-        {
-            $log_string = '';
         }
 
         switch( $level )
@@ -45,12 +43,12 @@ class secqru_worker
         return $log_string;
     }
 
-    function link_exists()
+    public function link_exists()
     {
         return strpos( $_SERVER['REQUEST_URI'], '/link/' );
     }
 
-    function init_url( $root )
+    public function init_url( $root )
     {
         $this->url = substr( $_SERVER['REQUEST_URI'], strlen( $root ) );
         $this->url = explode( '/', $this->url );
@@ -59,7 +57,7 @@ class secqru_worker
             exit( self::log( 'bad url', 3 ) );
     }
 
-    function get_app( $apps )
+    public function get_app( $apps )
     {
         if( !isset( $apps[$this->url[0]] ) )
         {
@@ -70,7 +68,7 @@ class secqru_worker
         return $this->url[0];
     }
 
-    function switch_app( $app, $switches )
+    public function switch_app( $app, $switches )
     {
         $sw_app = self::get_dns( 'sw_app', -1 );
 
@@ -95,7 +93,7 @@ class secqru_worker
         return new secqru_cryptex( $password );
     }
 
-    function link_produce( $password )
+    public function link_produce( $password )
     {
         if( self::get_set( 'link' ) )
         {
@@ -113,7 +111,7 @@ class secqru_worker
         }
     }
 
-    function get_raw_link()
+    public function get_raw_link()
     {
         if( isset( $this->url[1] ) && $this->url[1] == 'link' &&
             isset( $this->url[2] ) )
@@ -124,7 +122,7 @@ class secqru_worker
         return 0;
     }
 
-    function link_load( $password )
+    public function link_load( $password )
     {
         if( isset( $this->url[1] ) && $this->url[1] == 'link' &&
             isset( $this->url[2] ) )
@@ -144,7 +142,7 @@ class secqru_worker
         }
     }
 
-    function get_raw()
+    public function get_raw()
     {
         if( isset( $this->url[3] ) && $this->url[3] == 'raw' &&
             isset( $this->url[4] ) )
@@ -163,7 +161,7 @@ class secqru_worker
     {
         for( $i = 0; $i < $size; $i++ )
         {
-            if( ( $i % 3 ) == 0 ) 
+            if( ( $i % 3 ) == 0 )
                 $rseed = pack( 'I', mt_rand() );
 
             if( $i == 0 )

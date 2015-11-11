@@ -4,10 +4,10 @@ class secqru_app_tiklan
 {
     private $w;
 
-    const formsize = 33;
-    const max_routers = 64;
+    const FORMSIZE = 33;
+    const MAX_ROUTERS = 64;
 
-    function __construct( &$w )
+    public function __construct( &$w )
     {
         $this->w = &$w;
     }
@@ -21,8 +21,8 @@ class secqru_app_tiklan
     {
         return ~( 0xFFFFFFFF << 32 - $cidr ) & 0xFFFFFFFF;
     }
-    
-    function html()
+
+    public function html()
     {
         // RESET
         if( $this->w->get_set( 'reset' ) )
@@ -56,7 +56,7 @@ class secqru_app_tiklan
             $temp--;
             $this->w->log( 'routers--', 7 );
         }
-        $subnum = $this->w->get_int( 'subnum:router count', 3, 2, self::max_routers, $temp );
+        $subnum = $this->w->get_int( 'subnum:router count', 3, 2, self::MAX_ROUTERS, $temp );
 
         // SUBNET COUNTER CORRECTION BY CIDR (MASK)
         $temp = floor( self::ipv4_neg( $g_cidr ) / 256 );
@@ -72,13 +72,9 @@ class secqru_app_tiklan
         $g_horizon = ( ( $g_rng & 0x7FFFFFFF ) % 97 ) + 1;
 
         // GLOBAL RANGE CHANGED?
-        if( !$this->w->get_set( 'g_rw' ) ||
-            $g_rng == $this->w->get_ip2long( 'g_rw:global range', false ) )
-            $g_changed = false;
-        else
+        if( $this->w->get_set( 'g_rw' ) &&
+            $g_rng != $this->w->get_ip2long( 'g_rw:global range', false ) )
         {
-            $g_changed = true;
-
             for( $i = 1; $i <= $subnum; $i++ )
                 $this->w->clear( "subnet$i" );
             $this->w->clear( 'g_eoip' );
@@ -157,12 +153,12 @@ class secqru_app_tiklan
         for( $i = 1; $i <= $subnum; $i++ )
         {
             $subnets[$i]['eoip_mark'] = $temp + $i;
-            $temp += self::max_routers - $i - 2;
+            $temp += self::MAX_ROUTERS - $i - 2;
         }
 
         // NEW STATION SELECTED?
         $g_sel = $this->w->get_int( 'g_sel:selected station', 0 );
-        $subnets[0]['name'] = '...'.str_repeat( '&nbsp;', self::formsize - 3 );
+        $subnets[0]['name'] = '...'.str_repeat( '&nbsp;', self::FORMSIZE - 3 );
 
         if( $g_sel != 0 && $g_sel > $subnum )
         {
@@ -300,7 +296,7 @@ class secqru_app_tiklan
             $html->open( 'td', ' valign="top" align="left"' );
             $html->open( 'div');
 
-            $html->put_input( 'g_lan', self::formsize, 50, $g_lan, 'bridge name' );
+            $html->put_input( 'g_lan', self::FORMSIZE, 50, $g_lan, 'bridge name' );
             $html->add( ' — bridge name', 1 );
 
             $html->put_input_hidden( 'g_rw', long2ip( $g_rng ) );
@@ -327,13 +323,13 @@ class secqru_app_tiklan
             $html->put_input( 'g_eoip', 5, 5, $g_eoip );
             $html->add( ' — tunnel id seed', 1 );
 
-            $html->put_input_ro( self::formsize, long2ip( $g_rng + 1 ).' — '.long2ip( $g_rng_end ) );
+            $html->put_input_ro( self::FORMSIZE, long2ip( $g_rng + 1 ).' — '.long2ip( $g_rng_end ) );
             $html->add( ' — address pool', 1 );
 
-            $html->put_input_ro( self::formsize, long2ip( $subnets[0]['subnet'] + 1 ).' — '.long2ip( $subnets[0]['subnet_end'] ) );
+            $html->put_input_ro( self::FORMSIZE, long2ip( $subnets[0]['subnet'] + 1 ).' — '.long2ip( $subnets[0]['subnet_end'] ) );
             $html->add( ' — VPN pool', 1 );
 
-            $html->put_input( 'g_psw', self::formsize, 50, $g_psw );
+            $html->put_input( 'g_psw', self::FORMSIZE, 50, $g_psw );
             $html->add( ' — password seed', 1 );
 
             $html->open_select( 'g_sel' );
@@ -341,8 +337,8 @@ class secqru_app_tiklan
                 for( $i = 0; $i <= $subnum; $i++ )
                 {
                     $temp = $subnets[$i]['name'];
-                    if( $i && strlen( $temp ) > self::formsize )
-                        $temp = substr( $temp, 0, self::formsize - 3 ).'...' ;
+                    if( $i && strlen( $temp ) > self::FORMSIZE )
+                        $temp = substr( $temp, 0, self::FORMSIZE - 3 ).'...' ;
 
                     $html->put_option( $i, $temp, $g_sel == $i );
                 }
@@ -396,11 +392,11 @@ class secqru_app_tiklan
             $html->open( 'td', ' valign="top"' );
             $html->open( 'div' );
             {
-                $html->input_full( 'text', "name$i", self::formsize, 50, $subnets[$i]['name'], $subnets[$i]['name_ok'] ? '' : 'e' );
+                $html->input_full( 'text', "name$i", self::FORMSIZE, 50, $subnets[$i]['name'], $subnets[$i]['name_ok'] ? '' : 'e' );
                 $html->add( ' — router name', 1 );
 
                 $html->put_input_hidden( "is_pub$i", $subnets[$i]['is_pub'] ? '1' : '0' );
-                $html->input_full( 'text', "pub$i", self::formsize, 50, $subnets[$i]['pub'], $subnets[$i]['is_pub'] ? ( $subnets[$i]['pub_ok'] ? '' : 'e' ) : ( $nopublic ? 'e' : 'r' ) );
+                $html->input_full( 'text', "pub$i", self::FORMSIZE, 50, $subnets[$i]['pub'], $subnets[$i]['is_pub'] ? ( $subnets[$i]['pub_ok'] ? '' : 'e' ) : ( $nopublic ? 'e' : 'r' ) );
                 $html->put_submit( "sw_pub$i", $subnets[$i]['is_pub'] ? 'x' : 'v' );
                 $html->add( ' — public address', 1 );
 
@@ -418,7 +414,7 @@ class secqru_app_tiklan
                 $html->input_full( 'text', 0, 15, 0, $subnets[$i]['addr_vpn'], 'r' );
                 $html->add( ' — VPN address', 1 );
 
-                $html->input_full( 'text', 0, self::formsize, 0, "{$subnets[$i]['addr_dhcp_first']} - {$subnets[$i]['addr_dhcp_last']}", 'r' );
+                $html->input_full( 'text', 0, self::FORMSIZE, 0, "{$subnets[$i]['addr_dhcp_first']} - {$subnets[$i]['addr_dhcp_last']}", 'r' );
                 $html->add( ' — DHCP pool', 1 );
             }
             $html->close();

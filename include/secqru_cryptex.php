@@ -25,7 +25,7 @@ class secqru_cryptex
         // be aware of use $rndsz > 3
         for( $i = 0; $i < $size; $i++ )
         {
-            if( ( $i % $rndsz ) == 0 ) 
+            if( ( $i % $rndsz ) == 0 )
                 $rseed = pack( 'I', mt_rand() );
 
             if( $i == 0 )
