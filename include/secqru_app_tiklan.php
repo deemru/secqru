@@ -7,12 +7,12 @@ class secqru_app_tiklan
     const FORMSIZE = 33;
     const MAX_ROUTERS = 64;
 
-    public function __construct( &$w )
+    public function __construct( secqru_worker &$w )
     {
         $this->w = &$w;
     }
 
-    public function put_buttons( &$html )
+    public function put_buttons( secqru_html &$html )
     {
         $html->add( ' — ' );
         $html->put_submit( 'help', 'help' );
