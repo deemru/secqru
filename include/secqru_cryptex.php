@@ -76,25 +76,25 @@ class secqru_cryptex
         $iv = $this->ivsz ? self::rnd( $this->ivsz, $this->rndsz ) : ''; // oiv
         $key = self::key( $iv );
         $mac = substr( self::hash( $key . $data ), -$this->macsz );
-        $data = self::cbc( $iv . $mac, $key, $data, TRUE );
+        $data = self::cbc( $iv . $mac, $key, $data, true );
         return bin2hex( $iv . $mac . $data );
     }
 
     public function decryptex( $data )
     {
         if( strlen( $data ) < ( $this->ivsz * 2 + $this->macsz ) * 2 // bin2hex
-            || ctype_xdigit( $data ) !== TRUE )
-            return FALSE;
+            || ctype_xdigit( $data ) !== true )
+            return false;
 
         $data = pack( 'H*', $data );
         $iv = substr( $data, 0, $this->ivsz );
         $mac = substr( $data, $this->ivsz, $this->macsz );
         $data = substr( $data, $this->ivsz + $this->macsz );
         $key = self::key( $iv );
-        $data = self::cbc( $iv . $mac, $key, $data, FALSE );
+        $data = self::cbc( $iv . $mac, $key, $data, false );
 
         if( $mac != substr( self::hash( $key . $data ), -$this->macsz ) )
-            return FALSE;
+            return false;
 
         return gzinflate( substr( $data, $this->ivsz ) ); // skip inner iv
     }

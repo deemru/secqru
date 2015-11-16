@@ -18,8 +18,8 @@
     if( defined( 'SECQRU_ERRORLOG' ) )
     {
         error_reporting( -1 );
-        ini_set( 'display_errors', TRUE );
-        ini_set( 'display_startup_errors', TRUE );
+        ini_set( 'display_errors', true );
+        ini_set( 'display_startup_errors', true );
         ini_set( 'log_errors', 1 );
         ini_set( 'error_log', SECQRU_ERRORLOG );
     }
@@ -132,7 +132,7 @@
 
     if( defined( 'SECQRU_GITHEAD' ) )
     {
-        $temp = file_get_contents( '.git/FETCH_HEAD', NULL, NULL, 0, 40 );
+        $temp = file_get_contents( '.git/FETCH_HEAD', null, null, 0, 40 );
         $html->add( "/<a href=\"https://github.com/deemru/secqru/commit/$temp\">".substr( $temp, 0, 7 ).'</a>' );
     }
 
@@ -146,6 +146,6 @@
     echo $html->render();
 
     if( defined( 'SECQRU_DEBUG' ) )
-        echo '<center><small>'.sprintf( 'Memory: %.02f KB', memory_get_peak_usage()/1024 ).'<br>'.sprintf( 'Speed: %.01f ms', 1000 * ( microtime( TRUE ) - $_SERVER['REQUEST_TIME_FLOAT'] ) ).'</small></center>';
+        echo '<center><small>'.sprintf( 'Memory: %.02f KB', memory_get_peak_usage()/1024 ).'<br>'.sprintf( 'Speed: %.01f ms', 1000 * ( microtime( true ) - $_SERVER['REQUEST_TIME_FLOAT'] ) ).'</small></center>';
 
 ?>

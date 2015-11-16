@@ -115,7 +115,7 @@ class secqru_worker
 
             $_POST = unserialize( $data );
 
-            if( $_POST === FALSE )
+            if( $_POST === false )
                 exit( self::log( 'bad link', 3 ) );
 
             self::log( 'link', 7 );
