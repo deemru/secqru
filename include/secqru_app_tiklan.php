@@ -12,6 +12,13 @@ class secqru_app_tiklan
         $this->w = &$w;
     }
 
+    public function put_buttons( &$html )
+    {
+        $html->add( ' — ' );
+        $html->put_submit( 'help', 'help' );
+        $html->put_submit( 'reset', 'reset' );
+    }
+
     private function ipv4_pos( $cidr )
     {
         return  ( 0xFFFFFFFF << 32 - $cidr ) & 0xFFFFFFFF;
@@ -289,7 +296,6 @@ class secqru_app_tiklan
 
         $html = new secqru_html();
 
-        $html->put( '<hr>' );
         $html->open( 'table' );
         $html->open( 'tr' );
         {
