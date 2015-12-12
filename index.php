@@ -36,7 +36,7 @@
     require_once( 'include/secqru_worker.php' );
     $w = new secqru_worker();
 
-    $apps = array( 'ip', 'tiklan' );
+    $apps = array( 'ip', 'tiklan', 'zakrug' );
     list( $a, $app ) = $w->init( $apps );
 
     if( defined( 'SECQRU_APPLOG' ) && $a )
@@ -75,7 +75,7 @@
     $html->open( 'div', ' style="width: 80em; margin:0 auto; padding: 1em;"' );
 
     // FORM
-    $html->open( 'form', ' action="' . SECQRU_ADDR . $app . '" method="post"' );
+    $html->open( 'form', ' enctype="multipart/form-data" method="POST" action="' . SECQRU_ADDR . $app . '"' );
     $html->input_full( 'submit', 'save', 0, 0, 'save', ' style="position: absolute; left: -100em;"' );
 
     // BUTTONS

@@ -126,6 +126,22 @@ class secqru_worker
         return array( new $classname( $this ), $app );
     }
 
+    private function get_ip()
+    {
+    }
+
+    public function cryptex( $string )
+    {
+        $cryptex = self::get_cryptex( SECQRU_PASS );
+        return $cryptex->cryptex( $string );
+    }
+
+    public function decryptex( $string )
+    {
+        $cryptex = self::get_cryptex( SECQRU_PASS );
+        return $cryptex->decryptex( $string );
+    }
+
     public function get_cookie_apps( $apps )
     {
         if( isset( $_COOKIE['apps'] ) )
@@ -212,6 +228,17 @@ input
     background: #$color_lite;
     color: #$color_txt2;
     border: 1px solid #$color_bord;
+}
+
+input.checkbox
+{
+    position: relative;
+    bottom: -0.1em;
+}
+
+input.file
+{
+    padding: 0;
 }
 
 select
@@ -330,7 +357,6 @@ a
         $raw = $_POST[$name];
         switch( $type )
         {
-
             case 0: // decimal integer
                 $val = intval( $raw );
                 if( strval( $val ) == $raw )

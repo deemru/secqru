@@ -7,12 +7,12 @@ class secqru_app_tiklan
     const FORMSIZE = 33;
     const MAX_ROUTERS = 64;
 
-    public function __construct( secqru_worker &$w )
+    public function __construct( secqru_worker $w )
     {
-        $this->w = &$w;
+        $this->w = $w;
     }
 
-    public function put_buttons( secqru_html &$html )
+    public function put_buttons( secqru_html $html )
     {
         $html->add( ' — ' );
         $html->put_submit( 'help', 'help' );
@@ -261,7 +261,7 @@ class secqru_app_tiklan
         {
             $router_config = self::get_config( $g_lan, $g_cidr, $g_vpn, $vpn_protocols, $g_horizon, $subnets, $subnum, $g_sel, $raw );
 
-            header('Content-Type: text/plain');
+            header( 'Content-Type: text/plain' );
 
             foreach( $router_config as $line )
                 echo $line.PHP_EOL;
@@ -439,25 +439,25 @@ class secqru_app_tiklan
 
     private function get_config( $g_lan, $g_cidr, $g_vpn, $vpn_protocols, $g_horizon, $subnets, $subnum, $g_sel, $i )
     {
-        $html_config = array();
+        $config = array();
 
         // GATEWAY OR NEWBIE
         if( !$g_sel || ( $g_sel && $g_sel == $i ) )
         {
             // GW
-            $html_config[] = "# GW ({$subnets[$i]['name']})";
-            $html_config[] = "interface bridge add name=\"$g_lan\" comment=\"$g_lan\" protocol-mode=none";
-            $html_config[] = "ip address add address={$subnets[$i]['addr_gw']}/$g_cidr interface=\"$g_lan\"";
-            $html_config[] = "ip route add dst-address={$subnets[0]['addr_subnet']}/24 type=unreachable distance=250";
-            $html_config[] = '';
+            $config[] = "# GW ({$subnets[$i]['name']})";
+            $config[] = "interface bridge add name=\"$g_lan\" comment=\"$g_lan\" protocol-mode=none";
+            $config[] = "ip address add address={$subnets[$i]['addr_gw']}/$g_cidr interface=\"$g_lan\"";
+            $config[] = "ip route add dst-address={$subnets[0]['addr_subnet']}/24 type=unreachable distance=250";
+            $config[] = '';
 
             // DHCP
-            $html_config[] = "# DHCP ({$subnets[$i]['name']})";
-            $html_config[] = "ip pool add ranges={$subnets[$i]['addr_dhcp_first']}-{$subnets[$i]['addr_dhcp_last']} name=\"{$subnets[$i]['dhcp_pool_name']}\"";
-            $html_config[] = "ip dhcp-server network add address={$subnets[$i]['addr_subnet']}/$g_cidr gateway={$subnets[$i]['addr_gw']} dns-server={$subnets[$i]['addr_gw']}";
-            $html_config[] = "ip dhcp-server add name=\"{$subnets[$i]['dhcp_server_name']}\" interface=\"$g_lan\" address-pool=\"{$subnets[$i]['dhcp_pool_name']}\"";
-            $html_config[] = "ip dhcp-server enable \"{$subnets[$i]['dhcp_server_name']}\"";
-            $html_config[] = '';
+            $config[] = "# DHCP ({$subnets[$i]['name']})";
+            $config[] = "ip pool add ranges={$subnets[$i]['addr_dhcp_first']}-{$subnets[$i]['addr_dhcp_last']} name=\"{$subnets[$i]['dhcp_pool_name']}\"";
+            $config[] = "ip dhcp-server network add address={$subnets[$i]['addr_subnet']}/$g_cidr gateway={$subnets[$i]['addr_gw']} dns-server={$subnets[$i]['addr_gw']}";
+            $config[] = "ip dhcp-server add name=\"{$subnets[$i]['dhcp_server_name']}\" interface=\"$g_lan\" address-pool=\"{$subnets[$i]['dhcp_pool_name']}\"";
+            $config[] = "ip dhcp-server enable \"{$subnets[$i]['dhcp_server_name']}\"";
+            $config[] = '';
         }
 
         // PPP PROFILE ADD
@@ -520,20 +520,20 @@ class secqru_app_tiklan
         // PPP Server
         if( sizeof( $ppp_users ) || sizeof( $ppp_servers ) )
         {
-            $html_config[] = "# PPP Server ({$subnets[$i]['name']})";
-            $html_config[] = "interface {$vpn_protocols[$g_vpn]}-server server set enabled=yes";
-            $html_config = array_merge( $html_config, $ppp_users );
-            $html_config =  array_merge( $html_config, $ppp_servers );
-            $html_config[] = '';
+            $config[] = "# PPP Server ({$subnets[$i]['name']})";
+            $config[] = "interface {$vpn_protocols[$g_vpn]}-server server set enabled=yes";
+            $config = array_merge( $config, $ppp_users );
+            $config =  array_merge( $config, $ppp_servers );
+            $config[] = '';
         }
 
         // PPP Client
         if( sizeof( $ppp_clients ) || sizeof( $ppp_routes ) )
         {
-            $html_config[] = "# PPP Client ({$subnets[$i]['name']})";
-            $html_config = array_merge( $html_config, $ppp_clients );
-            $html_config =  array_merge( $html_config, $ppp_routes );
-            $html_config[] = '';
+            $config[] = "# PPP Client ({$subnets[$i]['name']})";
+            $config = array_merge( $config, $ppp_clients );
+            $config =  array_merge( $config, $ppp_routes );
+            $config[] = '';
         }
 
         // EOIP ADD
@@ -554,18 +554,18 @@ class secqru_app_tiklan
             }
         }
 
-        $html_config[] = "# EoIP ({$subnets[$i]['name']})";
-        $html_config = array_merge( $html_config, $eoip_interface );
-        $html_config[] = '';
+        $config[] = "# EoIP ({$subnets[$i]['name']})";
+        $config = array_merge( $config, $eoip_interface );
+        $config[] = '';
 
-        $html_config[] = "# EoIP to Bridge ({$subnets[$i]['name']})";
-        $html_config = array_merge( $html_config, $eoip_to_bridge );
-        $html_config[] = '';
+        $config[] = "# EoIP to Bridge ({$subnets[$i]['name']})";
+        $config = array_merge( $config, $eoip_to_bridge );
+        $config[] = '';
 
-        $html_config[] = "# EoIP filter DHCP ({$subnets[$i]['name']})";
-        $html_config = array_merge( $html_config, $eoip_bridge_filter );
+        $config[] = "# EoIP filter DHCP ({$subnets[$i]['name']})";
+        $config = array_merge( $config, $eoip_bridge_filter );
 
-        return $html_config;
+        return $config;
     }
 }
 

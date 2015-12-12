@@ -12,6 +12,8 @@
     date_default_timezone_set( 'Europe/Moscow' );
     mb_internal_encoding( 'UTF-8' );
 
+    define( 'SECQRU_CACHE', './var/cache/' );
+
     /*
     define( 'SECQRU_DEBUG', 1 );
     define( 'SECQRU_ERRORLOG', './var/log/_error.log' );

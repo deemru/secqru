@@ -53,7 +53,7 @@ class secqru_html
         self::put( "<option value=\"$id\"$selected>$text</option>" );
     }
 
-    public function input_full( $type, $name, $size, $max, $value, $style, $is_put = true )
+    public function input_full( $type, $name, $size, $max, $value, $style, $is_put = true, $is_br = false )
     {
         switch( $style )
         {
@@ -65,16 +65,17 @@ class secqru_html
                 $style = $style ? $style : '';
         }
 
-        $name = $name ? " name=\"$name\"" : '';
-        $size = $size ? " size=\"$size\"" : '';
-        $max = $max ? " maxlength=\"$max\"" : '';
+        $name = $name !== false ? " name=\"$name\"" : '';
+        $size = $size !== false ? " size=\"$size\"" : '';
+        $max = $max !== false ? " maxlength=\"$max\"" : '';
+        $value = $value !== false ? " value=\"$value\"" : '';
 
-        $value = "<input type=\"$type\"$name$size$max value=\"$value\"$style>";
+        $value = "<input type=\"$type\"$name$size$max$value$style>";
 
         if( $is_put )
-            self::put( $value );
+            self::put( $value, $is_br );
         else
-            self::add( $value );
+            self::add( $value, $is_br );
     }
 
     public function put_input_hidden( $name, $value )
@@ -83,19 +84,29 @@ class secqru_html
         self::put( $value );
     }
 
-    public function put_submit( $name, $value, $is_put = true )
+    public function put_submit( $name, $value, $is_put = true, $is_br = false )
     {
         $value = "<input type=\"submit\" name=\"$name\" value=\"$value\">";
 
         if( $is_put )
-            self::put( $value );
+            self::put( $value, $is_br );
         else
-            self::add( $value );
+            self::add( $value, $is_br );
     }
 
     public function put_input( $name, $size, $max, $value, $is_put = true )
     {
         self::input_full( 'text', $name, $size, $max, $value, '', $is_put );
+    }
+
+    public function put_checkbox( $name, $value, $is_put = true )
+    {
+        self::input_full( 'checkbox', $name, false, false, $value, ' class="checkbox"' . ( $value ? ' checked' : '' ), $is_put );
+    }
+
+    public function put_file( $name, $is_put = true, $is_br = false )
+    {
+        self::input_full( 'file', $name, false, false, false, ' class="file"', $is_put, $is_br );
     }
 
     public function put_input_ro( $size, $value, $is_put = true )
