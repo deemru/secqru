@@ -5,9 +5,9 @@
 
 # Available applications
 
-[ip](https://secq.ru/ip) — basic info about server (local) and your (remote) ip
-[tiklan](https://secq.ru/tiklan) — makes a broadcast domain between Mikrotik routers
-[zakrug](https://secq.ru/zakrug) — adds beautiful rounded corners to your images
+- [ip](https://secq.ru/ip) — basic info about server (local) and your (remote) ip
+- [tiklan](https://secq.ru/tiklan) — makes a broadcast domain between Mikrotik routers
+- [zakrug](https://secq.ru/zakrug) — adds beautiful rounded corners to your images
 
 # Portable
 
