@@ -152,6 +152,12 @@ class secqru_app_zakrug
         $this->u_ztail = $this->w->get_int( 'zt:ztail', 10, 1, 99 );
         $this->u_zclarity = $this->w->get_int( 'zc:zclarity', 10, 1, 99 );
 
+        if( !defined( 'GD_VERSION' ) )
+        {
+            $this->w->log( 'PHP GD is required', 1 );
+            return;
+        }
+
         $this->img = $this->get_img_user();
 
         // zakrug
@@ -270,7 +276,7 @@ class secqru_app_zakrug
 
             if( !empty( $this->w->log ) )
             {
-                $html->put( $this->w->log );
+                $html->put( $this->w->log, 1 );
             }
 
             if( isset( $this->img ) && $this->img )
