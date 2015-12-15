@@ -165,7 +165,7 @@ class secqru_app_zakrug
                 $this->img = self::resize_img( $this->img, $this->u_w, $this->u_w_fix, $this->u_h, $this->u_h_fix );
                 if( $this->u_radius )
                 {
-                    $this->img = self::zakrug( $this->img, $this->u_radius, $this->u_zbegin / 10, $this->u_zend / 10, $this->u_ztail, $this->u_zclarity / 10, $this->u_noline == false );
+                    $this->img = self::zakrug( $this->img, $this->u_radius, $this->u_zbegin / 10, $this->u_zend / 10, $this->u_ztail, $this->u_zclarity / 10, !$this->u_noline );
                 }
 
                 if( !defined( 'SECQRU_CACHE' ) )
@@ -179,7 +179,7 @@ class secqru_app_zakrug
         }
     }
 
-    public function put_buttons( $html )
+    public function put_buttons( secqru_html $html )
     {
         $html->add( ' — ' );
         $html->put_submit( 'help', 'help' );
@@ -400,9 +400,9 @@ class secqru_app_zakrug
         $w_ratio = $w_img / $w;
         $h_ratio = $h_img / $h;
 
-        if( $wfixed == false )
+        if( !$wfixed )
         {
-            if( $hfixed == false )
+            if( !$hfixed )
             {
                 if( $w_img < $w && $h_img < $h )
                 {
@@ -421,7 +421,7 @@ class secqru_app_zakrug
                 $w = min( $w, round( $w_img / $h_ratio ) );
             }
         }
-        else if( $hfixed == false )
+        else if( !$hfixed )
         {
             $h = min( $h, round( $h_img / $w_ratio ) );
         }
