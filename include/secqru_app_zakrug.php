@@ -37,9 +37,6 @@ class secqru_app_zakrug
     private $u_ff;
     private $u_foutput;
     private $img;
-    private $img_w;
-    private $img_h;
-    private $output;
 
     private function show_img()
     {
@@ -148,8 +145,8 @@ class secqru_app_zakrug
         $this->u_radius = $this->w->get_int( 'zr:radius', round( min( $this->u_w, $this->u_h )/10 ), 0, 9999 );
         $this->u_noline = $this->w->get_set( 'nl' );
         $this->u_zbegin = $this->w->get_int( 'zb:zbegin', 28, 10, 998 );
-        $this->u_zend = $this->w->get_int( 'ze:zend', 29, $this->u_zbegin + 1, min( $this->u_zbegin + 40, 999 ) );
-        $this->u_ztail = $this->w->get_int( 'zt:ztail', 10, 1, 99 );
+        $this->u_zend = $this->w->get_int( 'ze:zend', 30, $this->u_zbegin + 1, min( $this->u_zbegin + 40, 999 ) );
+        $this->u_ztail = $this->w->get_int( 'zt:ztail', 7, 1, 99 );
         $this->u_zclarity = $this->w->get_int( 'zc:zclarity', 10, 1, 99 );
 
         if( !defined( 'GD_VERSION' ) )
@@ -168,32 +165,9 @@ class secqru_app_zakrug
                 $this->img = self::resize_img( $this->img, $this->u_w, $this->u_w_fix, $this->u_h, $this->u_h_fix );
                 if( $this->u_radius )
                 {
-                    $this->img = self::zakrug( $this->img, $this->u_radius, $this->u_zbegin / 10, $this->u_zend / 10, $this->u_ztail, $this->u_zclarity / 10 );
-                    
-                    if( $this->u_noline == false )
-                    {
-                    $w_img = imagesx( $this->img ); 
-                    $h_img = imagesy( $this->img );
-                    
-                    for( $x = 0; $x < $w_img; $x++ )
-                    {
-                        self::set_alpha_pixel( $this->img, $x, 0, 42 );
-                        self::set_alpha_pixel( $this->img, $x, 1, 14 );
-                        self::set_alpha_pixel( $this->img, $x, $h_img - 1, 48 );
-                        self::set_alpha_pixel( $this->img, $x, $h_img - 2, 16 );
-                    }
-
-                    for( $y = 2; $y < $h_img - 2; $y++ )
-                    {
-                        self::set_alpha_pixel( $this->img, 0, $y, 48 );
-                        self::set_alpha_pixel( $this->img, 1, $y, 16 );
-                        self::set_alpha_pixel( $this->img, $w_img - 1, $y, 48 );
-                        self::set_alpha_pixel( $this->img, $w_img - 2, $y, 16 );
-                    }
-
-                    }
+                    $this->img = self::zakrug( $this->img, $this->u_radius, $this->u_zbegin / 10, $this->u_zend / 10, $this->u_ztail, $this->u_zclarity / 10, $this->u_noline == false );
                 }
-                
+
                 if( !defined( 'SECQRU_CACHE' ) )
                 {
                     header( 'Content-Type: image/png' );
@@ -237,7 +211,7 @@ class secqru_app_zakrug
             $html->put_input( 'zr', 4, 4, $this->u_radius );
             $html->add( ' ' );
             $html->put_checkbox( 'nl', $this->u_noline, 0 );
-            $html->add( ' — радиус закругления (только края)', true );
+            $html->add( ' — радиус закругления (только углы)', true );
 
             $html->put_input( 'zb', 3, 3, $this->u_zbegin );
             $html->add( ' ' );
@@ -355,9 +329,10 @@ class secqru_app_zakrug
         return $zdb;
     }
 
-    private function zakrug( $img, $radius, $zbegin = 2.8, $zend = 3.0, $ztail = 7, $zclarity = 0.7 )
+    private function zakrug( $img, $radius, $zbegin = 2.8, $zend = 3.0, $ztail = 7, $zclarity = 0.7, $line )
     {
         $zdb = $this->get_zdb( $radius, $zbegin, $zend, $ztail, $zclarity );
+        $ldb = array();
 
         $w_img = imagesx( $img ); 
         $h_img = imagesy( $img );
@@ -375,6 +350,9 @@ class secqru_app_zakrug
                     self::set_alpha_pixel( $img, $w_img - 1 - $x, $y, $alpha );
                     self::set_alpha_pixel( $img, $w_img - 1 - $x, $h_img - 1 - $y, $alpha );
                     self::set_alpha_pixel( $img, $x, $h_img - 1 - $y, $alpha );
+
+                    if( $x == $y && $alpha != 127 )
+                        $ldb[] = $alpha;
                 }
 
         // x <> y
@@ -389,6 +367,27 @@ class secqru_app_zakrug
                     self::set_alpha_pixel( $img, $w_img - 1 - $x, $h_img - 1 - $y, $alpha );
                     self::set_alpha_pixel( $img, $x, $h_img - 1 - $y, $alpha );
                 }
+
+        if( $line )
+        {
+            $n = sizeof( $ldb );
+            for( $i = 0; $i < $n; $i++ )
+            {
+                $alpha = $ldb[$i];
+
+                for( $x = 0; $x < $w_img; $x++ )
+                {
+                    self::set_alpha_pixel( $this->img, $x, $i, $alpha );
+                    self::set_alpha_pixel( $this->img, $x, $h_img - $i - 1, $alpha );
+                }
+
+                for( $y = 2; $y < $h_img - 2; $y++ )
+                {
+                    self::set_alpha_pixel( $this->img, $i, $y, $alpha );
+                    self::set_alpha_pixel( $this->img, $w_img - $i - 1, $y, $alpha );
+                }
+            }
+        }
 
         return $img;
     }
@@ -487,6 +486,18 @@ class secqru_app_zakrug
 
                 if( $img )
                 {
+                    // PHP 5.4 >>>>
+                    if( !function_exists( 'imagepalettetotruecolor' ) )
+                    {
+                        if( !imageistruecolor( $img ) )
+                        {
+                            $img_true = imagecreatetruecolor( imagesx( $img ), imagesy( $img ) );
+                            imagecopy( $img_true, $img, 0, 0, 0, 0, imagesx( $img ), imagesy( $img ) );
+                            $img = $img_true;
+                        }
+                    }
+                    else
+                    // <<<< PHP 5.4
                     imagepalettetotruecolor( $img );
                     imagealphablending( $img, false );
                     imagesavealpha( $img, true );
@@ -498,20 +509,6 @@ class secqru_app_zakrug
 
         $this->w->log( 'Неизвестный формат файла', 2 );
         return false;
-    }
-}
-
-// PHP 5.4 support
-if( !function_exists( 'imagepalettetotruecolor' ) )
-{
-    function imagepalettetotruecolor( &$img )
-    {
-        if( imageistruecolor( $img ) )
-            return;
-
-        $img_true = imagecreatetruecolor( imagesx( $img ), imagesy( $img ) );
-        imagecopy( $img_true, $img, 0, 0, 0, 0, imagesx( $img ), imagesy( $img ) );
-        $img = $img_true;
     }
 }
 
