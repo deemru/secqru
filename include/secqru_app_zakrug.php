@@ -394,7 +394,7 @@ class secqru_app_zakrug
 
     private function resize_img( $img, $w, $wfixed, $h, $hfixed )
     {
-        $w_img = imagesx( $img ); 
+        $w_img = imagesx( $img );
         $h_img = imagesy( $img );
 
         $w_ratio = $w_img / $w;
