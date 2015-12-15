@@ -32,7 +32,6 @@ class secqru_app_zakrug
     private $u_ztail;
     private $u_zclarity;
 
-    private $uploaded_id;
     private $uploaded_file;
     private $u_ff;
     private $u_foutput;
@@ -72,8 +71,8 @@ class secqru_app_zakrug
             {
                 do
                 {
-                    $this->uploaded_id = date('Ymd_His_') . $this->w->rndhex( 3 );
-                    $this->uploaded_file = SECQRU_CACHE . 'zakrug/upload/' . $this->uploaded_id . ".$img_type";
+                    $fileid = date('Ymd_His_') . $this->w->rndhex( 3 );
+                    $this->uploaded_file = SECQRU_CACHE . "zakrug/upload/$fileid.$img_type";
                 }
                 while( file_exists( $this->uploaded_file ) );
 
@@ -104,15 +103,16 @@ class secqru_app_zakrug
                 $this->uploaded_file = false;
                 $this->u_ff = false;
                 $this->w->log( 'file not found', 2 );
+                return false;
             }
 
-            $this->uploaded_id = substr( $this->uploaded_file, -26, -4 );
+            $fileid = substr( $this->uploaded_file, -26, -4 );
         }
 
-        if( defined( 'SECQRU_CACHE' ) )
+        if( defined( 'SECQRU_CACHE' ) && isset( $fileid ) )
         {
             $params = "{$this->u_w}_{$this->u_h}_{$this->u_w_fix}_{$this->u_h_fix}_{$this->u_noline}_{$this->u_radius}_{$this->u_zbegin}_{$this->u_zend}_{$this->u_ztail}_{$this->u_zclarity}";
-            $this->u_foutput = SECQRU_CACHE . 'zakrug/ready/' . $this->uploaded_id . "__($params).png";
+            $this->u_foutput = SECQRU_CACHE . "zakrug/ready/{$fileid}__($params).png";
         }
 
         if( isset( $img ) )
@@ -329,12 +329,12 @@ class secqru_app_zakrug
         return $zdb;
     }
 
-    private function zakrug( $img, $radius, $zbegin = 2.8, $zend = 3.0, $ztail = 7, $zclarity = 0.7, $line )
+    private function zakrug( $img, $radius, $zbegin = 2.8, $zend = 3.0, $ztail = 7, $zclarity = 0.7, $line = true )
     {
         $zdb = $this->get_zdb( $radius, $zbegin, $zend, $ztail, $zclarity );
         $ldb = array();
 
-        $w_img = imagesx( $img ); 
+        $w_img = imagesx( $img );
         $h_img = imagesy( $img );
 
         $x_max = min( $w_img, $radius );

@@ -126,10 +126,6 @@ class secqru_worker
         return array( new $classname( $this ), $app );
     }
 
-    private function get_ip()
-    {
-    }
-
     public function cryptex( $string )
     {
         $cryptex = self::get_cryptex( SECQRU_PASS );
