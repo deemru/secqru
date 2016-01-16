@@ -5,6 +5,9 @@ class secqru_zakrug
 
     public function zakrug( $img, $radius, $zbegin = 2.8, $zend = 3.0, $ztail = 7, $zclarity = 1.0, $line = true )
     {
+        if( $radius <= 0 )
+            return $img;
+
         $zdb = self::get_zdb( $radius, $zbegin, $zend, $ztail, $zclarity );
         $ldb = array();
 
