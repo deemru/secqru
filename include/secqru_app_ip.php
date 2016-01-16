@@ -29,8 +29,10 @@ class secqru_app_ip
             return;
 
         $html =
-'%s:<div style="font-size: 36">
-    %s — %s — %s — %s — %s — %s
+'<div style="text-align: center">
+    <div style="font-size: 36; margin: 1em auto;">%s:<br>
+        <h1>%s</h1>%s — %s — %s — %s — %s<br>
+    </div>
 </div>';
 
         $ip = $_SERVER[$attr];
@@ -49,7 +51,7 @@ class secqru_app_ip
     {
         $out = '';
 
-        self::ip_render( 'SERVER_ADDR', $out );
+        //self::ip_render( 'SERVER_ADDR', $out );
 
         foreach( self::ATTRS as $attr )
             self::ip_render( $attr, $out );
