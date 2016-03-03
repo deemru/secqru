@@ -174,7 +174,7 @@ class secqru_app_zakrug
                 if( !defined( 'SECQRU_CACHE' ) )
                 {
                     header( 'Content-Type: image/png' );
-                    exit( imagepng( $this->img, NULL, 9 ) );
+                    exit( imagepng( $this->img, null, 9 ) );
                 }
 
                 imagepng( $this->img, $this->u_foutput, 9 );
