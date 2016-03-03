@@ -191,7 +191,7 @@ class secqru_worker
         $color_txt2 = $is_lite ? '202010' : '101820';
         $color_bord = $is_lite ? 'B0B0A0' : '606870';
         $color_link = $is_lite ? '606050' : '808890';
-        $style_font_fixed = 'font-size: 12pt; font-family: "Courier New", Courier, monospace;';
+        $style_font_fixed = 'font-size: 12pt; font-size: 1.14vw; font-family: "Courier New", Courier, monospace;';
 
         $style =
 "body, table, input, select, div
@@ -255,6 +255,7 @@ div.textarea
     text-align: left;
     word-wrap: break-word;
     font-size: 10pt;
+    font-size: 0.95vw;
 }
 
 .ro

@@ -56,7 +56,6 @@
     $html->open( 'head' );
     $html->put( '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' );
     $html->put( '<meta name="format-detection" content="telephone=no">' );
-    $html->put( '<meta name="viewport" content="width=1312, maximum-scale=1.0">' );
     if( $a && method_exists( $a, 'get_title' ) )
         $html->put( '<title>' . $a->get_title() . '</title>' );
     else
@@ -73,7 +72,7 @@
 
     // BODY
     $html->open( 'body', ' style="overflow-y: scroll;"' );
-    $html->open( 'div', ' style="width: 80em; margin: 1em auto;"' );
+    $html->open( 'div', ' style="width: 80em; margin:0 auto; padding: 1em;"' );
 
     // FORM
     $html->open( 'form', ' enctype="multipart/form-data" method="POST" action="' . SECQRU_ADDR . $app . '"' );
