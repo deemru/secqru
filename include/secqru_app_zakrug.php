@@ -281,8 +281,9 @@ class secqru_app_zakrug
         {
             $funcs = array( 'imagecreatefrompng', 'imagecreatefromjpeg', 'imagecreatefromgif' );
             $types = array( 'png', 'jpg', 'gif' );
+            $typein = $type;
 
-            switch( $type )
+            switch( $typein )
             {
                 default:
                 // case 'png':
