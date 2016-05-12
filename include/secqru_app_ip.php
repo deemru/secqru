@@ -4,11 +4,11 @@ class secqru_app_ip
 {
     private $w;
 
-    const ATTRS = array( 'HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR' );
+    private static $ATTRS = array( 'HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR' );
 
     private function getMainIP()
     {
-        foreach( self::ATTRS as $attr )
+        foreach( self::$ATTRS as $attr )
             if( !empty( $_SERVER[$attr] ) )
                 return $_SERVER[$attr];
     }
@@ -53,7 +53,7 @@ class secqru_app_ip
 
         //self::ip_render( 'SERVER_ADDR', $out );
 
-        foreach( self::ATTRS as $attr )
+        foreach( self::$ATTRS as $attr )
             self::ip_render( $attr, $out );
 
         return explode( SECQRU_EOL, $out );

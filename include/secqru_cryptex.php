@@ -22,16 +22,17 @@ class secqru_cryptex
 
     public function rnd( $size = 8, $rndsz = 1 )
     {
-        // be aware of use $rndsz > 3
+        if( function_exists( 'random_bytes' ) )
+            return random_bytes( $size );
+
+        $rnd = '';
+
         for( $i = 0; $i < $size; $i++ )
         {
             if( ( $i % $rndsz ) == 0 )
                 $rseed = pack( 'I', mt_rand() );
 
-            if( $i == 0 )
-                $rnd = $rseed[ $i % $rndsz ];
-            else
-                $rnd.= $rseed[ $i % $rndsz ];
+            $rnd.= $rseed[ $i % $rndsz ];
         }
 
         return $rnd;
