@@ -4,7 +4,23 @@ class secqru_app_ip
 {
     private $w;
 
-    private static $ATTRS = array( 'HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR' );
+    private static $ATTRS = array( 'REMOTE_ADDR',
+                                   'HTTP_CLIENT_IP',
+                                   'HTTP_X_FORWARDED_FOR',
+                                   'HTTP_FORWARDED_FOR',
+                                   'HTTP_X_FORWARDED',
+                                   'HTTP_FORWARDED',
+                                   'HTTP_FORWARDED_FOR_IP',
+                                   'HTTP_VIA',
+                                   'HTTP_PROXY_CONNECTION',
+                                   'CLIENT_IP',
+                                   'X_FORWARDED_FOR',
+                                   'FORWARDED_FOR',
+                                   'X_FORWARDED',
+                                   'FORWARDED',
+                                   'FORWARDED_FOR_IP',
+                                   'VIA',
+                                   'PROXY_CONNECTION' );
 
     private function getMainIP()
     {
@@ -18,9 +34,16 @@ class secqru_app_ip
         $this->w = &$w;
     }
 
+    // deprecated
     public function get_title()
     {
         return self::getMainIP();
+    }
+
+    // api rework
+    public function prep()
+    {
+        $this->w->set_title( self::getMainIP() );
     }
 
     private function ip_render( $attr, &$out )
@@ -50,8 +73,6 @@ class secqru_app_ip
     public function html()
     {
         $out = '';
-
-        //self::ip_render( 'SERVER_ADDR', $out );
 
         foreach( self::$ATTRS as $attr )
             self::ip_render( $attr, $out );
