@@ -5,37 +5,24 @@ class secqru_cryptex
     private $psw;
     private $ivsz;
     private $macsz;
-    private $rndsz;
     private $cbcsz;
     private $hash;
 
-    public function __construct( $psw, $ivsz = 4, $macsz = 4, $rndsz = 2,
+    public function __construct( $psw, $ivsz = 4, $macsz = 4,
                                  $hash = 'gost', $cbcsz = 32 )
     {
         $this->psw = $psw;
         $this->ivsz = $ivsz;
         $this->macsz = $macsz;
-        $this->rndsz = $rndsz;
         $this->cbcsz = $cbcsz;
         $this->hash = $hash;
     }
 
-    public function rnd( $size = 8, $rndsz = 1 )
+    public function rnd( $size = 8 )
     {
         if( function_exists( 'random_bytes' ) )
             return random_bytes( $size );
-
-        $rnd = '';
-
-        for( $i = 0; $i < $size; $i++ )
-        {
-            if( ( $i % $rndsz ) == 0 )
-                $rseed = pack( 'I', mt_rand() );
-
-            $rnd.= $rseed[ $i % $rndsz ];
-        }
-
-        return $rnd;
+        return mcrypt_create_iv( $size, MCRYPT_DEV_URANDOM );
     }
 
     private function hash( $data )
@@ -72,9 +59,9 @@ class secqru_cryptex
     public function cryptex( $data )
     {
         $data = gzdeflate( $data, 9 );
-        $iv = $this->ivsz ? self::rnd( $this->ivsz, $this->rndsz ) : ''; // iiv
+        $iv = $this->ivsz ? self::rnd( $this->ivsz ) : ''; // iiv
         $data = $iv . $data;
-        $iv = $this->ivsz ? self::rnd( $this->ivsz, $this->rndsz ) : ''; // oiv
+        $iv = $this->ivsz ? self::rnd( $this->ivsz ) : ''; // oiv
         $key = self::key( $iv );
         $mac = substr( self::hash( $key . $data ), -$this->macsz );
         $data = self::cbc( $iv . $mac, $key, $data, true );
