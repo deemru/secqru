@@ -563,12 +563,10 @@ class secqru_app_tiklan
         $eoip_interface = array();
         $eoip_to_bridge = array();
         $eoip_bridge_filter = array();
-        $eoip_routes = array();
         for( $s = 1; $s <= $subnum; $s++ )
         {
             if( $i != $s && ( !$g_sel || ( $g_sel && $g_sel == $s ) || ( $g_sel && $g_sel == $i ) ) )
             {
-                $eoip_name = "$g_lan--{$subnets[$s]['name']}";
                 $eoip_name_direct = "$g_lan-EoIP-{$subnets[$s]['name']}";
                 $eoip_id_direct = $subnets[ min( $i, $s ) ]['eoip_direct'] + max( $i, $s ) - 2;
 
