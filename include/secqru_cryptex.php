@@ -22,7 +22,14 @@ class secqru_cryptex
     {
         if( function_exists( 'random_bytes' ) )
             return random_bytes( $size );
-        return mcrypt_create_iv( $size, MCRYPT_DEV_URANDOM );
+        if( function_exists( 'mcrypt_create_iv' ) )
+            return mcrypt_create_iv( $size, MCRYPT_DEV_URANDOM );
+
+        $rnd = '';
+        while( $size-- )
+            $rnd .= chr( mt_rand() );
+
+        return $rnd;
     }
 
     private function hash( $data )
