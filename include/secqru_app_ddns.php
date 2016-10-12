@@ -335,7 +335,7 @@ class secqru_app_ddns
                     $this->w->log( 'use DDNS-LINK on an intendent device only', 1 );
                     $this->w->log( '# ВНИМАНИЕ: используйте DDNS-LINK только на целевом устройстве', 8 );
                     $this->w->log( '', 8 );
-                    $this->w->log( "# DDNS-LINK: <a href=\"{$this->w->get_special_link( $temp )}\">{$this->db['record']}</a>", 8 );
+                    $this->w->log( "# DDNS-LINK: <a href=\"{$this->w->get_special_link( $temp )}/{$this->db['record']}\">{$this->db['record']}</a>", 8 );
                     return;
                 }
 
