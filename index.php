@@ -36,7 +36,7 @@
     require_once( 'include/secqru_worker.php' );
     $w = new secqru_worker();
 
-    $apps = array( 'ip', 'tiklan', 'zakrug' );
+    $apps = array( 'ip', 'tiklan', 'zakrug', 'ddns' );
     list( $a, $app ) = $w->init( $apps );
 
     if( defined( 'SECQRU_APPLOG' ) && $a )
@@ -48,6 +48,9 @@
         . ' | ' . $_SERVER['REQUEST_URI'].PHP_EOL );
     }
 
+    if( $a && method_exists( $a, 'prep' ) )
+        $a->prep();
+
     require_once( 'include/secqru_html.php' );
     $html = new secqru_html();
 
@@ -56,10 +59,7 @@
     $html->open( 'head' );
     $html->put( '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' );
     $html->put( '<meta name="format-detection" content="telephone=no">' );
-    if( $a && method_exists( $a, 'get_title' ) )
-        $html->put( '<title>' . $a->get_title() . '</title>' );
-    else
-        $html->put( '<title>' . SECQRU_SITE . ( $a ? " — $app</title>" : '</title>' ) );
+    $html->put( '<title>' . $w->get_title() . '</title>' );
     $html->put( '<link rel="shortcut icon" href="' . SECQRU_ADDR . 'favicon.ico" type="image/x-icon">' );
 
     // STYLE
@@ -147,5 +147,3 @@
 
     if( defined( 'SECQRU_DEBUG' ) )
         echo '<center><small>'.sprintf( 'Memory: %.02f KB', memory_get_peak_usage()/1024 ).'<br>'.sprintf( 'Speed: %.01f ms', 1000 * ( microtime( true ) - $_SERVER['REQUEST_TIME_FLOAT'] ) ).'</small></center>';
-
-?>

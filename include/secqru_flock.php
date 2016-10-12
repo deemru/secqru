@@ -8,10 +8,10 @@ class secqru_flock
     private $timeout;
 
     public function __construct( $filename,
-                          $delay = 100000 /* 0.1 sec */,
-                          $timeout = 1000000 /* 1 sec */ )
+                                 $delay = 100000 /* 0.1 sec */,
+                                 $timeout = 1000000 /* 1 sec */ )
     {
-        $this->fp = 0;
+        $this->fp = false;
         $this->filename = $filename;
         $this->delay = $delay;
         $this->timeout = $timeout;
@@ -28,8 +28,8 @@ class secqru_flock
 
         $this->fp = fopen( $this->filename, $access );
 
-        if( !$this->fp )
-            return 0;
+        if( $this->fp == false )
+            return false;
 
         $timer = 0;
         do
@@ -42,7 +42,7 @@ class secqru_flock
         }
         while( $timer < $this->timeout );
 
-        return 0;
+        return false;
     }
 
     public function close()
@@ -51,7 +51,7 @@ class secqru_flock
         {
             flock( $this->fp, LOCK_UN );
             fclose( $this->fp );
-            $this->fp = 0;
+            $this->fp = false;
         }
     }
 
@@ -60,12 +60,10 @@ class secqru_flock
         self::close();
 
         if( !self::open( 'a+' ) )
-            return 0;
+            return false;
 
         fwrite( $this->fp, $data );
         self::close();
-        return 1;
+        return true;
     }
 }
-
-?>

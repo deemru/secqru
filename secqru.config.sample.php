@@ -59,4 +59,3 @@ style="width:88px; height:31px; border:0;" onclick="try{Ya.Metrika.informer({i:t
 <noscript><div><img src="https://mc.yandex.ru/watch/32274279?ut=noindex" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 <!-- /Yandex.Metrika counter -->' );
     */
-?>

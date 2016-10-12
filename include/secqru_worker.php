@@ -5,6 +5,9 @@ class secqru_worker
     public $log = array();
     public $url = array();
 
+    private $app;
+    private $title;
+
     public function ezlog( $message, $print, $value, $level = 0 ) {
         return self::log( "$message \"$print\" = \"$value\"", $level );
     }
@@ -13,7 +16,7 @@ class secqru_worker
     {
         $log_string = '';
 
-        if( defined( 'SECQRU_DEBUG' ) )
+        if( defined( 'SECQRU_DEBUG' ) && $level != 8 )
         {
             $dbg = debug_backtrace();
             $log_string = ' (';
@@ -22,23 +25,24 @@ class secqru_worker
                 if( $i > 0 )
                     $log_string .= ' > ';
                 $file = substr( $dbg[$i]['file'], strrpos( $dbg[$i]['file'], '\\' ) + 1 );
-                $log_string .= $file.':'.$dbg[$i]['line'];
+                $log_string .= $file . ':' . $dbg[$i]['line'];
             }
             $log_string .= ')';
         }
 
         switch( $level )
         {
-            case 0: $level = '#   DEBUG: '; break;
+            case 0: $level = '# DEBUG: '; break;
             case 1: $level = '# WARNING: '; break;
-            case 2: $level = '#   ERROR: '; break;
+            case 2: $level = '# ERROR: '; break;
             case 3: $level = '# CRITICAL: '; break;
             case 7: $level = '# SUCCESS: '; break;
+            case 8: $level = ''; break;
             default:
-                exit( "# CRITICAL: unknown level == $level".$log_string );
+                exit( "# CRITICAL: unknown level == $level" . $log_string );
         }
 
-        $log_string = $level.$message.$log_string;
+        $log_string = $level . $message . $log_string;
         $this->log[] = $log_string;
         return $log_string;
     }
@@ -80,6 +84,7 @@ class secqru_worker
         if( $app )
         {
             self::set_cookie_apps( $app, $apps );
+            $this->app = $app;
         }
         else
         {
@@ -143,7 +148,7 @@ class secqru_worker
         if( isset( $_COOKIE['apps'] ) )
         {
             $apps_user = $_COOKIE['apps'];
-            $apps_user = explode( ':', $apps_user );
+            $apps_user = explode( '-', $apps_user );
             $apps_user = array_intersect( $apps_user, $apps );
             $apps = array_merge( $apps_user, array_diff( $apps, $apps_user ) );
         }
@@ -157,7 +162,7 @@ class secqru_worker
         $app = array( $app );
         $apps_new = array_merge( $app, array_diff( $apps, $app ) );
         if( $apps_new !== $apps )
-            setcookie( 'apps', implode( ':', $apps_new ), 0x7FFFFFFF );
+            setcookie( 'apps', implode( '-', $apps_new ), 0x7FFFFFFF );
     }
 
     public function get_style( &$is_lite, &$color_back )
@@ -318,16 +323,9 @@ a
 
     static public function rndhex( $size )
     {
-        for( $i = 0; $i < $size; $i++ )
-        {
-            if( ( $i % 3 ) == 0 )
-                $rseed = pack( 'I', mt_rand() );
-
-            if( $i == 0 )
-                $rnd = $rseed[ $i % 3 ];
-            else
-                $rnd.= $rseed[ $i % 3 ];
-        }
+        $rnd = '';
+        while( $size-- )
+            $rnd .= chr( mt_rand() );
 
         return bin2hex( $rnd );
     }
@@ -352,6 +350,7 @@ a
             return self::get_default( $default );
 
         $raw = $_POST[$name];
+
         switch( $type )
         {
             case 0: // decimal integer
@@ -366,17 +365,21 @@ a
             case 1: // dns like string
                 $val = preg_replace( '/[^A-Za-z0-9\-.]/', '', $raw );
 
-                if( $val && $val == $raw ) {
+                if( $val && $val == $raw )
                     return $val;
-                }
 
-                if( !$val ) {
+                if( !$val )
+                {
                     $default = self::get_default( $default );
-                    self::ezlog( 'default', $print, $default, 1 );
+                    if( $default != $raw )
+                        self::ezlog( 'default', $print, $default, 1 );
                     return $default;
                 }
 
-                self::ezlog( 'filtered', $print, $val, 1 );
+                if( defined( 'SECQRU_DEBUG' ) )
+                    self::ezlog( "'$raw' filtered", $print, $val, 1 );
+                else
+                    self::ezlog( 'filtered', $print, $val, 1 );
                 return $val;
 
             case 2: // ip address
@@ -393,6 +396,45 @@ a
             default:
                 exit( self::log( "\"$print\" unknown type", 3 ) );
         }
+    }
+
+    public function get_db()
+    {
+        if( isset( $_POST['db'] ) &&
+            ( $db = $_POST['db'] ) &&
+            ( $db = self::decryptex( $db ) ) &&
+            //( $db = preg_replace( '/[|]/', '"', $db ) ) &&
+            ( $db = unserialize( $db ) ) )
+            return $db;
+
+        return array();
+    }
+
+    public function put_db( $db )
+    {
+        return self::cryptex( serialize( $db ) );
+    }
+
+    public function get_special_link( $db )
+    {
+        return SECQRU_ADDR . $this->app . '/link/' . self::cryptex( serialize( $db ) );
+    }
+
+    public function get_title()
+    {
+        if( !isset( $this->title ) )
+        {
+            $this->title = SECQRU_SITE;
+            if( isset( $this->app ) )
+                $this->title .= " — {$this->app}";
+        }
+
+        return $this->title;
+    }
+
+    public function set_title( $title )
+    {
+        $this->title = $title;
     }
 
     public function get_int( $name, $default, $min = false, $max = false, $change = false )
@@ -429,5 +471,3 @@ a
     public function clear( $name ) { if( isset( $_POST[$name] ) ) unset( $_POST[$name] ); }
     public function reset(){ unset( $_POST ); }
 }
-
-?>

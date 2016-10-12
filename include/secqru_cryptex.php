@@ -94,5 +94,3 @@ class secqru_cryptex
         return gzinflate( substr( $data, $this->ivsz ) ); // skip inner iv
     }
 }
-
-?>

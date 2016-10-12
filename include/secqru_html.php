@@ -9,29 +9,21 @@ class secqru_html
 
     public function render()
     {
-        while( self::close() ){}
+        while( self::close() );
 
         $render = '';
+        $n = sizeof( $this->strs );
 
-        for( $i = 0, $n = sizeof( $this->strs ); $i < $n; $i++ )
+        for( $i = 0; $i < $n; $i++ )
         {
-            if( strlen( $this->strs[$i] ) )
-                $render .= str_repeat( '    ', $this->tabs[$i] ).$this->strs[$i];
+            $str = $this->strs[$i];
+            if( strlen( $str ) )
+                $render .= str_repeat( '    ', $this->tabs[$i] ) . $str;
 
             $render .= PHP_EOL;
         }
 
         return $render;
-    }
-
-    public function rows( $maxline )
-    {
-        $rows = 0;
-
-        for( $i = 0, $n = sizeof( $this->strs ); $i < $n; $i++ )
-            $rows += floor( strlen( $this->strs[$i] ) / $maxline ) + 1;
-
-        return $rows;
     }
 
     public function open( $tag, $options = '' )
@@ -120,8 +112,10 @@ class secqru_html
 
         if( is_a( $value, get_class() ) )
         {
-            while( $value->close() ){}
-            for( $i = 0, $n = sizeof( $value->strs ); $i < $n; $i++ )
+            while( $value->close() );
+            $n = sizeof( $value->strs );
+
+            for( $i = 0; $i < $n; $i++ )
             {
                 $this->strs[] = $value->strs[$i];
                 $this->tabs[] = $value->tabs[$i] + $this->lvl;
@@ -130,12 +124,12 @@ class secqru_html
         else if( is_array( $value ) )
             foreach( $value as $data )
             {
-                $this->strs[] = $data.$br;
+                $this->strs[] = $data . $br;
                 $this->tabs[] = $this->lvl;
             }
         else
         {
-            $this->strs[] = $value.$br;
+            $this->strs[] = $value . $br;
             $this->tabs[] = $this->lvl;
         }
     }
@@ -143,8 +137,7 @@ class secqru_html
     public function add( $value, $br = false )
     {
         $br = $br ? '<br>' : '';
-
-        $this->strs[ sizeof( $this->strs ) - 1 ] .= $value.$br;
+        $this->strs[ sizeof( $this->strs ) - 1 ] .= $value . $br;
     }
 
     public function close()
@@ -158,5 +151,3 @@ class secqru_html
         return true;
     }
 }
-
-?>

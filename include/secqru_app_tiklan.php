@@ -151,7 +151,7 @@ class secqru_app_tiklan
             $subnets[$i]['addr_dhcp_last'] = long2ip( $subnets[$i]['subnet_end'] );
             $subnets[$i]['dhcp_pool_name'] = "$g_lan ({$subnets[$i]['name']}) Pool";
             $subnets[$i]['dhcp_server_name'] = "$g_lan ({$subnets[$i]['name']}) DHCP";
-            $subnets[$i]['psw'] = $g_psw_prefix . substr( sha1( $g_psw.$subnets[$i]['name'] ), -8 );
+            $subnets[$i]['psw'] = $g_psw_prefix . substr( sha1( $g_psw . $subnets[$i]['name'] ), -8 );
         }
 
         // TUNNEL ID CALC
@@ -164,7 +164,7 @@ class secqru_app_tiklan
 
         // NEW STATION SELECTED?
         $g_sel = $this->w->get_int( 'g_sel:selected station', 0 );
-        $subnets[0]['name'] = '...'.str_repeat( '&nbsp;', self::FORMSIZE - 3 );
+        $subnets[0]['name'] = '...' . str_repeat( '&nbsp;', self::FORMSIZE - 3 );
 
         if( $g_sel != 0 && $g_sel > $subnum )
         {
@@ -263,7 +263,7 @@ class secqru_app_tiklan
             header( 'Content-Type: text/plain' );
 
             foreach( $router_config as $line )
-                echo $line.PHP_EOL;
+                echo $line . PHP_EOL;
             echo ' ';
 
             exit;
@@ -283,7 +283,7 @@ class secqru_app_tiklan
 * Minimum requirements: 2 routers + 1 public ip address
 * You can use a default configuration from scratch
 * Just correct public ip addresses
-* In the end you get "'.$g_lan.'" bridge
+* In the end you get "' . $g_lan . '" bridge
 * Test it, add ports, enjoy!
 
 * Contact — deem@deem.ru' );
@@ -328,10 +328,10 @@ class secqru_app_tiklan
             $html->put_input( 'g_eoip', 5, 5, $g_eoip );
             $html->add( ' — tunnel id seed', 1 );
 
-            $html->put_input_ro( self::FORMSIZE, long2ip( $g_rng + 1 ).' — '.long2ip( $g_rng_end ) );
+            $html->put_input_ro( self::FORMSIZE, long2ip( $g_rng + 1 ) . ' — ' . long2ip( $g_rng_end ) );
             $html->add( ' — address pool', 1 );
 
-            $html->put_input_ro( self::FORMSIZE, long2ip( $subnets[0]['subnet'] + 1 ).' — '.long2ip( $subnets[0]['subnet_end'] ) );
+            $html->put_input_ro( self::FORMSIZE, long2ip( $subnets[0]['subnet'] + 1 ) . ' — ' . long2ip( $subnets[0]['subnet_end'] ) );
             $html->add( ' — reserved pool', 1 );
 
             $html->put_input( 'g_psw', self::FORMSIZE, 50, $g_psw );
@@ -343,7 +343,7 @@ class secqru_app_tiklan
                 {
                     $temp = $subnets[$i]['name'];
                     if( $i && strlen( $temp ) > self::FORMSIZE )
-                        $temp = substr( $temp, 0, self::FORMSIZE - 3 ).'...' ;
+                        $temp = substr( $temp, 0, self::FORMSIZE - 3 ) . '...' ;
 
                     $html->put_option( $i, $temp, $g_sel == $i );
                 }
@@ -591,5 +591,3 @@ class secqru_app_tiklan
         return $config;
     }
 }
-
-?>

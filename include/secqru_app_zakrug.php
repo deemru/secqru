@@ -334,5 +334,3 @@ class secqru_app_zakrug
         return false;
     }
 }
-
-?>

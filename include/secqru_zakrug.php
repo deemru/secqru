@@ -188,5 +188,3 @@ class secqru_zakrug
     }
 
 }
-
-?>

@@ -66,7 +66,7 @@ class secqru_app_ip
         $mtr = "<a href=\"http://api.hackertarget.com/mtr/?q=$ip\">trace</a>";
 
         if( $out )
-            $out .= '<br>'.SECQRU_EOL;
+            $out .= '<br>' . SECQRU_EOL;
         $out .= sprintf( $html, $attr, $ip, $whois, $geoip, $dns, $ping, $mtr );
     }
 
@@ -80,5 +80,3 @@ class secqru_app_ip
         return explode( SECQRU_EOL, $out );
     }
 }
-
-?>
