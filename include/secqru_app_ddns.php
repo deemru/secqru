@@ -5,16 +5,16 @@ class secqru_app_ddns
     private $w;
     private $db;
 
-    private const FORMSIZE = 33;
+    const FORMSIZE = 33;
 
-    private const STATUS_NULL = 0;
-    private const STATUS_PDDTOKEN = 1;
-    private const STATUS_DOMAINS = 2;
-    private const STATUS_DOMAIN = 3;
-    private const STATUS_RECORDS = 4;
-    private const STATUS_RECORD = 5;
-    private const STATUS_DNSEDIT = 6;
-    private const STATUS_DDNSLINK = 7;
+    const STATUS_NULL = 0;
+    const STATUS_PDDTOKEN = 1;
+    const STATUS_DOMAINS = 2;
+    const STATUS_DOMAIN = 3;
+    const STATUS_RECORDS = 4;
+    const STATUS_RECORD = 5;
+    const STATUS_DNSEDIT = 6;
+    const STATUS_DDNSLINK = 7;
 
     private $last_selected;
 
