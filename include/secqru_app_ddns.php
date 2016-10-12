@@ -192,8 +192,9 @@ class secqru_app_ddns
             $this->db['ip'] = $_SERVER['REMOTE_ADDR'];
             $this->w->log = array();
 
-            if( self::yandexapi( 'dnsedit' ) == false )
-                header( $_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500 );
+            header( $_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500 );
+            if( self::yandexapi( 'dnsedit' ) )
+                header( $_SERVER['SERVER_PROTOCOL'] . ' 200 OK', true, 200 );
 
             header( 'Content-Type: text/plain' );
             foreach( $this->w->log as $string )
@@ -348,7 +349,7 @@ class secqru_app_ddns
                     $this->w->log( 'ip broken', 1 );
                     return;
                 }
-                
+
                 if( $ip == $this->db['ip'] )
                 {
                     $this->w->log( 'ip not changed', 1 );
