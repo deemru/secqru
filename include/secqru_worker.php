@@ -162,7 +162,7 @@ class secqru_worker
         $app = array( $app );
         $apps_new = array_merge( $app, array_diff( $apps, $app ) );
         if( $apps_new !== $apps )
-            setcookie( 'apps', implode( '-', $apps_new ), 0x7FFFFFFF );
+            setcookie( 'apps', implode( '-', $apps_new ), 0x7FFFFFFF, '/' );
     }
 
     public function get_style( &$is_lite, &$color_back )
@@ -170,13 +170,13 @@ class secqru_worker
         if( $this->get_set( 'sw_light' ) )
         {
             $is_lite = 1;
-            setcookie( 'gamma', 1, 0x7FFFFFFF );
+            setcookie( 'gamma', 1, 0x7FFFFFFF, '/' );
             $this->log( 'switch to light', 7 );
         }
         else if( $this->get_set( 'sw_night' ) )
         {
             $is_lite = 0;
-            setcookie( 'gamma', 0, 0x7FFFFFFF );
+            setcookie( 'gamma', 0, 0x7FFFFFFF, '/' );
             $this->log( 'switch to night', 7 );
         }
         else
