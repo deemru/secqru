@@ -192,7 +192,7 @@ class secqru_app_ddns
             $this->db['ip'] = $_SERVER['REMOTE_ADDR'];
             $this->w->log = array();
 
-            if( self::yandexapi( 'dnsedit' ) )
+            if( self::yandexapi( 'dnsedit' ) == false )
                 header( $_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500 );
 
             header( 'Content-Type: text/plain' );
