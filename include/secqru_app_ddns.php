@@ -9,13 +9,12 @@ class secqru_app_ddns
 
     const STATUS_NULL = 0;
     const STATUS_PDDTOKEN = 1;
-    const STATUS_DOMAINS = 2;
-    const STATUS_DOMAIN = 3;
-    const STATUS_RECORDS = 4;
-    const STATUS_RECORD = 5;
-    const STATUS_DNSEDIT = 6;
+    const STATUS_DOMAIN = 2;
+    const STATUS_RECORD = 3;
+    const STATUS_DNSEDIT = 4;
 
     private $last_selected;
+    private $isok = true;
 
     public function __construct( secqru_worker $w )
     {
@@ -33,7 +32,7 @@ class secqru_app_ddns
         $html->put_submit( 'reset', 'reset' );
     }
 
-    private function yandexapi( $function )
+    private function yandexapi( $function, $call = 0 )
     {
         $url = 'https://pddimp.yandex.ru/api2/admin/';
 
@@ -104,6 +103,13 @@ class secqru_app_ddns
 
         if( $json->{'success'} == 'error' )
         {
+            if( $call < 5 && !empty( $json->{'error'} ) && $json->{'error'} == 'bad_token' )
+            {
+                $this->w->log( 'bad_token (retry in 2 sec ...)', 1 );
+                sleep( 1 );
+                return self::yandexapi( $function, ++$call );
+            }
+
             $this->w->log( empty( $json->{'error'} ) ? 'json bad format' : $json->{'error'}, 2 );
             return false;
         }
@@ -257,13 +263,16 @@ class secqru_app_ddns
 
                 if( !self::get_domains() )
                 {
-                    unset( $this->db['token'] );
+                    if( $this->w->get_set( 'dmnx' ) )
+                    {
+                        $this->isok = false;
+                        $this->db['domain'] = $this->last_selected;
+                        $this->db['status'] = self::STATUS_DOMAIN;
+                    }
+                    else
+                        unset( $this->db['token'] );
                     return;
                 }
-
-                $this->db['status'] = self::STATUS_DOMAINS;
-
-            case self::STATUS_DOMAINS:
 
                 $this->db['status'] = self::STATUS_DOMAIN;
                 return;
@@ -285,15 +294,22 @@ class secqru_app_ddns
 
                 if( !self::get_records() )
                 {
-                    unset( $this->db['domain'] );
+                    if( $this->w->get_set( 'recx' ) )
+                    {
+                        $this->isok = false;
+                        $this->db['status'] = self::STATUS_RECORD;
+                        $this->db['record'] = $this->last_selected;
+                    }
+                    else
+                    {
+                        $this->last_selected = $this->db['domain'];
+                        unset( $this->db['domain'] );
+                    }
+
                     return;
                 }
 
                 unset( $this->db['domains'] );
-                $this->db['status'] = self::STATUS_RECORDS;
-
-            case self::STATUS_RECORDS:
-
                 $this->db['status'] = self::STATUS_RECORD;
                 return;
 
@@ -358,16 +374,16 @@ class secqru_app_ddns
                     return;
                 }
 
-                $temp = $this->db['ip'];
+                $this->last_selected = $this->db['ip'];
                 $this->db['ip'] = $ip;
 
                 if( !self::yandexapi( 'dnsedit' ) )
                 {
-                    $this->db['ip'] = $temp;
+                    $this->db['ip'] = $this->last_selected;
+                    $this->isok = false;
                     return;
                 }
 
-                $this->db['status'] = self::STATUS_DNSEDIT;
                 return;
 
             default:
@@ -402,7 +418,7 @@ class secqru_app_ddns
             $html->put_submit( 'tknx', 'x' );
             $html->add( ' — PddToken', 1 );
 
-            if( $this->db['status'] == self::STATUS_DOMAIN )
+            if( $this->db['status'] == self::STATUS_DOMAIN && $this->isok )
             {
                 $html->open_select( 'dmn' );
                 $count = sizeof( $this->db['domains'] );
@@ -439,7 +455,10 @@ class secqru_app_ddns
             $html->put_submit( 'dmnx', 'x' );
             $html->add( ' — Domain', 1 );
 
-            if( $this->db['status'] == self::STATUS_RECORD )
+            if( $this->db['status'] < self::STATUS_RECORD )
+                break;
+
+            if( $this->db['status'] == self::STATUS_RECORD && $this->isok )
             {
                 $html->open_select( 'rec' );
                 $count = sizeof( $this->db['records'] );
@@ -476,9 +495,12 @@ class secqru_app_ddns
             $html->put_submit( 'recx', 'x' );
             $html->add( ' — DNS record', 1 );
 
+            if( $this->db['status'] < self::STATUS_DNSEDIT )
+                break;
+
             if( $this->db['status'] == self::STATUS_DNSEDIT )
             {
-                if( $this->w->get_set( 'ipx' ) )
+                if( $this->w->get_set( 'ipx' ) || !$this->isok )
                 {
                     $html->put_input( 'ip', self::FORMSIZE, self::FORMSIZE, $this->db['ip'] );
                     $html->put_submit( 'ipv', 'v', 1 );
