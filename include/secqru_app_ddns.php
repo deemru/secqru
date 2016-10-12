@@ -14,7 +14,6 @@ class secqru_app_ddns
     const STATUS_RECORDS = 4;
     const STATUS_RECORD = 5;
     const STATUS_DNSEDIT = 6;
-    const STATUS_DDNSLINK = 7;
 
     private $last_selected;
 
@@ -194,7 +193,10 @@ class secqru_app_ddns
 
             header( $_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500 );
             if( self::yandexapi( 'dnsedit' ) )
+            {
                 header( $_SERVER['SERVER_PROTOCOL'] . ' 200 OK', true, 200 );
+                $this->w->log( $this->db['ip'], 7 );
+            }
 
             header( 'Content-Type: text/plain' );
             foreach( $this->w->log as $string )
