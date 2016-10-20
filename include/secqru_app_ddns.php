@@ -105,7 +105,7 @@ class secqru_app_ddns
         {
             if( $call < 5 && !empty( $json->{'error'} ) && $json->{'error'} == 'bad_token' )
             {
-                $this->w->log( 'bad_token (retry in 2 sec ...)', 1 );
+                $this->w->log( 'bad_token (retry in 1 sec ...)', 1 );
                 sleep( 1 );
                 return self::yandexapi( $function, ++$call );
             }
