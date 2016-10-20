@@ -28,7 +28,7 @@ class secqru_flock
 
         $this->fp = fopen( $this->filename, $access );
 
-        if( $this->fp == false )
+        if( $this->fp === false )
             return false;
 
         $timer = 0;
@@ -59,7 +59,7 @@ class secqru_flock
     {
         self::close();
 
-        if( !self::open( 'a+' ) )
+        if( self::open( 'a+' ) === false )
             return false;
 
         fwrite( $this->fp, $data );

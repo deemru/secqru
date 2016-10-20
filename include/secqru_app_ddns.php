@@ -57,10 +57,10 @@ class secqru_app_ddns
                 exit( $this->w->log( 'bad yandexapi', 3 ) );
         }
 
-        if( false == ( $ch = curl_init() ) )
+        if( false === ( $ch = curl_init() ) )
             exit( $this->w->log( 'curl_init failed', 3 ) );
 
-        if( false == curl_setopt_array( $ch, array (
+        if( false === curl_setopt_array( $ch, array (
             CURLOPT_RETURNTRANSFER  => true,
             CURLOPT_CONNECTTIMEOUT  => 10,
             CURLOPT_TIMEOUT         => 10,
@@ -70,7 +70,7 @@ class secqru_app_ddns
         ) ) )
             exit( $this->w->log( 'curl_setopt_array failed', 3 ) );
 
-        if( isset( $fields ) && false == curl_setopt( $ch, CURLOPT_POSTFIELDS, $fields ) )
+        if( isset( $fields ) && false === curl_setopt( $ch, CURLOPT_POSTFIELDS, $fields ) )
             exit( $this->w->log( 'curl_setopt failed', 3 ) );
 
         $json = curl_exec( $ch );
@@ -252,7 +252,7 @@ class secqru_app_ddns
                 if( empty( $this->db['token'] ) )
                 {
                     $token = $this->w->get_dns( 'tkn:PddToken', false );
-                    if( $token == false )
+                    if( $token === false )
                     {
                         $this->w->log( 'PddToken required', 1 );
                         return;
@@ -282,8 +282,8 @@ class secqru_app_ddns
                 if( empty( $this->db['domain'] ) )
                 {
                     $domain = $this->w->get_dns( 'dmn:Domain', false );
-                    if( $domain == false ||
-                        in_array( $domain, $this->db['domains'] ) == false )
+                    if( $domain === false ||
+                        in_array( $domain, $this->db['domains'] ) === false )
                     {
                         $this->w->log( 'Domain selection failed', 1 );
                         return;
@@ -318,8 +318,8 @@ class secqru_app_ddns
                 if( empty( $this->db['record'] ) )
                 {
                     $record = $this->w->get_dns( 'rec:DNS record', false );
-                    if( $record == false ||
-                        in_array( $record, $this->db['records'] ) == false )
+                    if( $record === false ||
+                        in_array( $record, $this->db['records'] ) === false )
                     {
                         $this->w->log( 'DNS record selection failed', 1 );
                         return;
@@ -357,12 +357,12 @@ class secqru_app_ddns
                     return;
                 }
 
-                if( $this->w->get_set( 'ipv' ) == false )
+                if( $this->w->get_set( 'ipv' ) === false )
                     return;
 
                 $ip = $this->w->get_dns( 'ip:record_ip', false );
 
-                if( $ip == false )
+                if( $ip === false )
                 {
                     $this->w->log( 'ip broken', 1 );
                     return;
