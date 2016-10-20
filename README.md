@@ -1,5 +1,5 @@
 # secqru
-[![Codacy Badge](https://api.codacy.com/project/badge/grade/c42fc1490b214bf89b22d7ca225592be)](https://www.codacy.com/app/deem/secqru) [![SensioLabsInsight](https://insight.sensiolabs.com/projects/c85f6208-3023-4fb5-9452-cd4317f3d12b/mini.png)](https://insight.sensiolabs.com/projects/c85f6208-3023-4fb5-9452-cd4317f3d12b)
+[![codacy](https://img.shields.io/codacy/grade/c42fc1490b214bf89b22d7ca225592be.svg?label=codacy)](https://www.codacy.com/app/deem/secqru) [![sensiolabs](https://img.shields.io/sensiolabs/i/c85f6208-3023-4fb5-9452-cd4317f3d12b.svg?label=sensiolabs)](https://insight.sensiolabs.com/projects/c85f6208-3023-4fb5-9452-cd4317f3d12b)
 
 [secqru](https://github.com/deemru/secqru) is a simple PHP platform for various applications
 
