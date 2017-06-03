@@ -11,19 +11,15 @@ class secqru_html
     {
         while( self::close() );
 
-        $render = '';
         $n = sizeof( $this->strs );
 
         for( $i = 0; $i < $n; $i++ )
         {
             $str = $this->strs[$i];
             if( strlen( $str ) )
-                $render .= str_repeat( '    ', $this->tabs[$i] ) . $str;
-
-            $render .= PHP_EOL;
+                echo str_repeat( '    ', $this->tabs[$i] ) . $str;
+            echo PHP_EOL;
         }
-
-        return $render;
     }
 
     public function open( $tag, $options = '' )
@@ -140,14 +136,17 @@ class secqru_html
         $this->strs[ sizeof( $this->strs ) - 1 ] .= $value . $br;
     }
 
-    public function close()
+    public function close( $n = 1 )
     {
         if( $this->lvl == 0 )
             return false;
 
-        $this->lvl--;
-        $this->strs[] = "</{$this->tags[$this->lvl]}>";
-        $this->tabs[] = $this->lvl;
+        while( $n-- )
+        {
+            $this->lvl--;
+            $this->strs[] = "</{$this->tags[$this->lvl]}>";
+            $this->tabs[] = $this->lvl;
+        }
         return true;
     }
 }

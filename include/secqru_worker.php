@@ -5,8 +5,12 @@ class secqru_worker
     public $log = array();
     public $url = array();
 
+    private $a;
     private $app;
-    private $title;
+    private $apps;
+    private $home;
+
+    private $gamma;
 
     public function ezlog( $message, $print, $value, $level = 0 ) {
         return self::log( "$message \"$print\" = \"$value\"", $level );
@@ -47,52 +51,140 @@ class secqru_worker
         return $log_string;
     }
 
-    public function init( &$apps )
+    private function logrec()
     {
-        // url
-        $this->url = substr( $_SERVER['REQUEST_URI'], strlen( SECQRU_ROOT ) );
-        $this->url = explode( '/', $this->url );
+        return date( 'Y.m.d H:i:s | ' ) . str_pad( $_SERVER['REMOTE_ADDR'], 15 ) . ' | ' . $_SERVER['REQUEST_URI'] . PHP_EOL;
+    }
 
-        if( !isset( $this->url[0] ) )
-            exit( self::log( 'bad url', 3 ) );
-
-        // appname
-        $app = $this->url[0];
-
-        if( $app && !in_array( $app, $apps, true ) )
+    public function access_log()
+    {
+        if( defined( 'SECQRU_ACCESSLOG' ) )
         {
-            header( $_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found' );
-            exit( self::log( 'unknown app', 3 ) );
+            require_once 'secqru_flock.php';
+            ( new secqru_flock( SECQRU_ACCESSLOG ) )->append( self::logrec() );
         }
+    }
 
-        // sw_app
-        $sw_app = self::get_dns( 'sw_app', -1 );
-
-        if( $sw_app != -1 )
+    public function app_log()
+    {
+        if( defined( 'SECQRU_APPLOG' ) )
         {
-            if( $sw_app == SECQRU_SITE )
-                $sw_app = '';
-
-            if( $sw_app != $app )
-            {
-                header( 'Location: ' . SECQRU_ADDR . $sw_app );
-                exit;
-            }
+            require_once 'secqru_flock.php';
+            ( new secqru_flock( sprintf( SECQRU_APPLOG, $this->app ) ) )->append( self::logrec() );
         }
+    }
 
-        // cookie apps
-        if( $app )
+    public function app_init()
+    {
+        if( method_exists( $this->a, 'init' ) )
+            $this->a->init();
+    }
+
+    public function is_link()
+    {
+        return method_exists( $this->a, 'link' );
+    }
+
+    public function gamma()
+    {
+        return $this->gamma;
+    }
+
+    public function action()
+    {
+        return SECQRU_ADDR . ( $this->home ? '' : $this->app );
+    }
+
+    public function body( secqru_html $html )
+    {
+        $this->a->html( $html );
+    }
+
+    public function githead( secqru_html $html )
+    {
+        if( defined( 'SECQRU_GITHEAD' ) &&  file_exists( SECQRU_GITHEAD ) )
         {
-            self::set_cookie_apps( $app, $apps );
-            $this->app = $app;
+            $rev = file_get_contents( SECQRU_GITHEAD, null, null, 0, 40 );
+            $html->add( "/<a href=\"https://github.com/deemru/secqru/commit/$rev\">".substr( $rev, 0, 7 ).'</a>' );
+        }
+    }
+
+    public function informer( secqru_html $html )
+    {
+        if( defined( 'SECQRU_INFORMER' ) )
+        {
+            $html->add( '', 1 );
+            $html->put( '', 1 );
+            $html->put( explode( SECQRU_EOL, sprintf( SECQRU_INFORMER, $this->color, $this->color, $this->gamma ? '0' : '1' ) ) );
+        }
+    }
+
+    public function buttons( secqru_html $html )
+    {
+        $html->input_full( 'submit', 'swap', 0, 0, SECQRU_SITE, $this->home ? 'r' : '' );
+        $html->add( ' — ' );
+
+        if( $this->home )
+        {
+            foreach( $this->apps as $app )
+                $html->input_full( 'submit', 'swap', 0, 0, $app, '' );
         }
         else
         {
-            $apps = self::get_cookie_apps( $apps );
-            return array( false, '' );
+            $html->input_full( 'submit', 'swap', 0, 0, $this->app, 'r' );
+
+            if( method_exists( $this->a, 'buttons' ) )
+                $this->a->buttons( $html );
+        }
+    }
+
+    public function init()
+    {
+        // URL
+        $this->url = substr( $_SERVER['REQUEST_URI'], strlen( SECQRU_ROOT ) );
+        $this->url = explode( '/', $this->url );
+
+        // APP
+        $app = $this->url[0];
+        $apps = explode( ':', SECQRU_APPS );
+
+        if( $app == '' )
+        {
+            $app = SECQRU_HOME;
+        }
+        else if( !in_array( $app, $apps, true ) )
+        {
+            header( $_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found' );
+            exit( self::log( 'app not found', 3 ) );
         }
 
-        // link produce
+        // SWITCH APP
+        $swap = self::get_dns( 'swap', -1 );
+
+        if( $swap != -1 )
+        {
+            if( $swap == SECQRU_SITE )
+                $swap = SECQRU_HOME;
+
+            if( $swap != $app )
+            {
+                if( $swap == SECQRU_HOME )
+                    $swap = '';
+
+                exit( header( 'Location: ' . SECQRU_ADDR . $swap ) );
+            }
+        }
+
+        $this->app = $app;
+        $this->home = $app == SECQRU_HOME;
+
+        // COOKIES
+        if( !$this->home )
+            self::set_cookie_apps( $app, $apps );
+        else
+            $this->apps = self::get_cookie_apps( $apps );
+
+        // LINK MAKE
         if( self::get_set( 'link' ) )
         {
             unset( $_POST['link'] );
@@ -102,15 +194,13 @@ class secqru_worker
 
             $cryptex = self::get_cryptex( SECQRU_PASS );
             $link = $cryptex->cryptex( serialize( $_POST ) );
-
             $link = SECQRU_ADDR . $app . '/link/' . $link;
-            header( "Location: $link" );
-            exit;
+            exit( header( "Location: $link" ) );
         }
 
-        // link load
-        if( isset( $this->url[1] ) && $this->url[1] == 'link' &&
-            isset( $this->url[2] ) )
+        // LINK LOAD
+        if( !empty( $this->url[1] ) && $this->url[1] == 'link' &&
+            !empty( $this->url[2] ) )
         {
             $cryptex = self::get_cryptex( SECQRU_PASS );
             $data = $cryptex->decryptex( $this->url[2] );
@@ -128,7 +218,7 @@ class secqru_worker
 
         require_once "include/secqru_app_$app.php";
         $classname = "secqru_app_$app";
-        return array( new $classname( $this ), $app );
+        $this->a = new $classname( $this );
     }
 
     public function cryptex( $string )
@@ -165,7 +255,7 @@ class secqru_worker
             setcookie( 'apps', implode( '-', $apps_new ), 0x7FFFFFFF, '/' );
     }
 
-    public function get_style( &$is_lite, &$color_back )
+    public function style( secqru_html $html )
     {
         if( $this->get_set( 'sw_light' ) )
         {
@@ -212,13 +302,15 @@ body
     color: #$color_txt1;
 }
 
-table {
+table
+{
     border: 0;
     border-collapse: collapse;
     width: 100%;
 }
 
-td {
+td
+{
     padding: 0;
 }
 
@@ -269,7 +361,8 @@ div.textarea
     color: #$color_txt1;
 }
 
-.red {
+.red
+{
     background: #e08080;
     color: #000000;
 }
@@ -286,12 +379,14 @@ a
 {
     color: #$color_link;
 }";
-        return explode( SECQRU_EOL, $style );
+        $this->gamma = $is_lite;
+        $this->color = $color_back;
+        $html->put( explode( SECQRU_EOL, $style ) );
     }
 
     private function get_cryptex( $password )
     {
-        require_once( 'secqru_cryptex.php' );
+        require_once 'secqru_cryptex.php';
         return new secqru_cryptex( $password );
     }
 
@@ -304,6 +399,16 @@ a
         }
 
         return 0;
+    }
+
+    public function get_addend()
+    {
+        if( !empty( $this->url[ 2 ] ) && $this->url[ 1 ] == 'link' )
+            $offset = 3;
+        else
+            $offset = 1;
+
+        return !empty( $this->url[ $offset ] ) ? array_slice( $this->url, $offset ) : false;
     }
 
     public function get_raw()
@@ -382,12 +487,21 @@ a
                     self::ezlog( 'filtered', $print, $val, 1 );
                 return $val;
 
-            case 2: // ip address
+            case 2: // ip2long address
                 $val = filter_var( $raw, FILTER_VALIDATE_IP );
 
-                if( $val && $val == $raw ) {
+                if( $val && $val == $raw )
                     return ip2long( $val );
-                }
+
+                $default = self::get_default( $default );
+                self::ezlog( 'default', $print, $default, 1 );
+                return $default;
+
+            case 3: // ip address
+                $val = filter_var( $raw, FILTER_VALIDATE_IP );
+
+                if( $val && $val == $raw )
+                    return $val;
 
                 $default = self::get_default( $default );
                 self::ezlog( 'default', $print, $default, 1 );
@@ -400,10 +514,8 @@ a
 
     public function get_db()
     {
-        if( isset( $_POST['db'] ) &&
-            ( $db = $_POST['db'] ) &&
-            ( $db = self::decryptex( $db ) ) &&
-            //( $db = preg_replace( '/[|]/', '"', $db ) ) &&
+        if( !empty( $_POST['db'] ) &&
+            ( $db = self::decryptex( $_POST['db'] ) ) &&
             ( $db = unserialize( $db ) ) )
             return $db;
 
@@ -422,14 +534,10 @@ a
 
     public function get_title()
     {
-        if( !isset( $this->title ) )
-        {
-            $this->title = SECQRU_SITE;
-            if( isset( $this->app ) )
-                $this->title .= " — {$this->app}";
-        }
+        if( method_exists( $this->a, 'title' ) )
+            return $this->a->title();
 
-        return $this->title;
+        return SECQRU_SITE . ( $this->home ? '' : " — {$this->app}" );
     }
 
     public function set_title( $title )
@@ -467,6 +575,7 @@ a
 
     public function get_dns( $name, $default ) { return $this->get_val( $name, $default, 1 ); }
     public function get_ip2long( $name, $default ) { return $this->get_val( $name, $default, 2 ); }
+    public function get_ip( $name, $default ) { return $this->get_val( $name, $default, 3 ); }
     public function get_set( $name ) { return isset( $_POST[$name] ); }
     public function clear( $name ) { if( isset( $_POST[$name] ) ) unset( $_POST[$name] ); }
     public function reset(){ unset( $_POST ); }

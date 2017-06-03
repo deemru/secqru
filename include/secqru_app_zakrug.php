@@ -182,19 +182,18 @@ class secqru_app_zakrug
         }
     }
 
-    public function put_buttons( secqru_html $html )
+    public function buttons( secqru_html $html )
     {
-        $html->add( ' — ' );
-        $html->put_submit( 'help', 'help' );
-        $html->put_submit( 'reset', 'reset' );
+        //$html->add( ' — ' );
+        //$html->put_submit( 'help', 'help' );
+        //$html->put_submit( 'reset', 'reset' );
     }
 
-    public function html()
+    public function html( secqru_html $html )
     {
         self::pre();
 
-        $html = new secqru_html();
-
+        $html->put( '<hr>' );
         $html->open( 'table' );
         $html->open( 'tr' );
         {
@@ -271,8 +270,11 @@ class secqru_app_zakrug
             $html->close();
         }
         $html->close();
+    }
 
-        return $html;
+    public function link()
+    {
+        
     }
 
     private function get_img_uploaded( $file, &$type )

@@ -2,26 +2,28 @@
 
     define( 'SECQRU_ROOT', '/secqru/' );
     define( 'SECQRU_SITE', 'secq.ru' );
+    define( 'SECQRU_HOME', 'home' );
+    define( 'SECQRU_APPS', 'ip:tiklan:zakrug:ddns' );
     define( 'SECQRU_PASS', 'password' );
-    define( 'SECQRU_EOL', "\n" );
-
     define( 'SECQRU_ADDR', 'http' .
     ( ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] == 'on' ) ? 's' : '' ) .
     '://' . $_SERVER['HTTP_HOST'] . SECQRU_ROOT );
 
     date_default_timezone_set( 'Europe/Moscow' );
     mb_internal_encoding( 'UTF-8' );
+    define( 'SECQRU_EOL', "
+" );
 
     define( 'SECQRU_CACHE', './var/cache/' );
 
-    /*
+/*
     define( 'SECQRU_DEBUG', 1 );
     define( 'SECQRU_ERRORLOG', './var/log/_error.log' );
     define( 'SECQRU_ACCESSLOG', './var/log/access.log' );
     define( 'SECQRU_APPLOG', './var/log/%s.log' );
     define( 'SECQRU_LOCKIP', './var/lock/' );
+    define( 'SECQRU_GITHEAD', '.git/FETCH_HEAD' );
 
-    define( 'SECQRU_GITHEAD', 1 );
     define( 'SECQRU_INFORMER', '<!-- Yandex.Metrika informer -->
 <a href="https://metrika.yandex.ru/stat/?id=32274279&amp;from=informer"
 target="_blank" rel="nofollow"><img src="https://informer.yandex.ru/informer/32274279/3_0_%sFF_%sFF_%s_pageviews"
@@ -58,4 +60,4 @@ style="width:88px; height:31px; border:0;" onclick="try{Ya.Metrika.informer({i:t
 </script>
 <noscript><div><img src="https://mc.yandex.ru/watch/32274279?ut=noindex" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 <!-- /Yandex.Metrika counter -->' );
-    */
+*/

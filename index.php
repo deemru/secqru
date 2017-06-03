@@ -1,17 +1,16 @@
 <?php
 
-    require( 'secqru.config.php' );
+    require 'secqru.config.php';
 
     if( defined( 'SECQRU_LOCKIP' ) )
     {
-        require_once( 'include/secqru_flock.php' );
-
-        $ip_lock = new secqru_flock( SECQRU_LOCKIP.$_SERVER['REMOTE_ADDR'].'.lock' );
-        if( !$ip_lock->open() )
+        require 'include/secqru_flock.php';
+        $l = new secqru_flock( SECQRU_LOCKIP . $_SERVER['REMOTE_ADDR'] );
+        if( !$l->open() )
         {
             header( 'Status: 503 Service Temporarily Unavailable' );
             header( 'Retry-After: 10' );
-            exit( '503' );
+            exit( SECQRU_SITE . ' busy' );
         }
     }
 
@@ -24,126 +23,62 @@
         ini_set( 'error_log', SECQRU_ERRORLOG );
     }
 
-    if( defined( 'SECQRU_ACCESSLOG' ) )
-    {
-        require_once( 'include/secqru_flock.php' );
-
-        ( new secqru_flock( SECQRU_ACCESSLOG ) )->append(
-        date( 'Y.m.d H:i:s | ' ) . str_pad( $_SERVER['REMOTE_ADDR'], 15 )
-        . ' | ' . $_SERVER['REQUEST_URI'].PHP_EOL );
-    }
-
-    require_once( 'include/secqru_worker.php' );
+    require 'include/secqru_worker.php';
     $w = new secqru_worker();
+    $w->access_log();
+    $w->init();
+    $w->app_log();
+    $w->app_init();
 
-    $apps = array( 'ip', 'tiklan', 'zakrug', 'ddns' );
-    list( $a, $app ) = $w->init( $apps );
-
-    if( defined( 'SECQRU_APPLOG' ) && $a )
-    {
-        require_once( 'include/secqru_flock.php' );
-
-        ( new secqru_flock( sprintf( SECQRU_APPLOG, $app ) ) )->append(
-        date( 'Y.m.d H:i:s | ' ) . str_pad( $_SERVER['REMOTE_ADDR'], 15 )
-        . ' | ' . $_SERVER['REQUEST_URI'].PHP_EOL );
-    }
-
-    if( $a && method_exists( $a, 'prep' ) )
-        $a->prep();
-
-    require_once( 'include/secqru_html.php' );
-    $html = new secqru_html();
+    require_once 'include/secqru_html.php';
+    $h = new secqru_html();
 
     // HEAD
-    $html->open( 'html' );
-    $html->open( 'head' );
-    $html->put( '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' );
-    $html->put( '<meta name="format-detection" content="telephone=no">' );
-    $html->put( '<title>' . $w->get_title() . '</title>' );
-    $html->put( '<link rel="shortcut icon" href="' . SECQRU_ADDR . 'favicon.ico" type="image/x-icon">' );
+    $h->open( 'html' );
+    $h->open( 'head' );
+    $h->put( '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' );
+    $h->put( '<meta name="format-detection" content="telephone=no">' );
+    $h->put( '<title>' . $w->get_title() . '</title>' );
+    $h->put( '<link rel="shortcut icon" href="' . SECQRU_ADDR . 'favicon.ico" type="image/x-icon">' );
 
     // STYLE
-    $html->open( 'style', ' type="text/css"' );
-    $is_lite = 0; // TODO
-    $color_back = 0; // TODO
-    $html->put( $w->get_style( $is_lite, $color_back ) );
-    $html->close();
-    $html->close();
+    $h->open( 'style', ' type="text/css"' );
+    $w->style( $h );
+    $h->close( 2 );
 
     // BODY
-    $html->open( 'body', ' style="overflow-y: scroll;"' );
-    $html->open( 'div', ' style="width: 80em; margin:0 auto; padding: 1em;"' );
+    $h->open( 'body', ' style="overflow-y: scroll;"' );
+    $h->open( 'div', ' style="width: 80em; margin:0 auto; padding: 1em;"' );
 
     // FORM
-    $html->open( 'form', ' enctype="multipart/form-data" method="POST" action="' . SECQRU_ADDR . $app . '"' );
-    $html->input_full( 'submit', 'save', 0, 0, 'save', ' style="position: absolute; left: -100em;"' );
+    $h->open( 'form', ' enctype="multipart/form-data" method="POST" action="' . $w->action() . '"' );
+    $h->input_full( 'submit', 'save', 0, 0, 'save', ' style="position: absolute; left: -100em;"' );
 
-    // BUTTONS
-    $html->open( 'table' );
-    $html->open( 'tr' );
-    $html->open( 'td' );
-    $html->input_full( 'submit', 'sw_app', 0, 0, SECQRU_SITE, $a ? '' : 'r' );
-    $html->add( ' — ' );
+    // TOP BUTTONS
+    $h->open( 'table' );
+    $h->open( 'tr' );
+    $h->open( 'td' );
+    $w->buttons( $h );
+    $h->close();
 
-    if( $a )
-    {
-        // APP SELECTED
-        $html->input_full( 'submit', 'sw_app', 0, 0, $app, 'r' );
-        if( method_exists( $a, 'put_buttons' ) )
-            $a->put_buttons( $html );
-    }
-    else foreach( $apps as $app_name )
-    {
-        // ALL APPS
-        $html->input_full( 'submit', 'sw_app', 0, 0, $app_name, '' );
-    }
+    $h->open( 'td', ' align="right"' );
+    if( $w->is_link() )
+        $h->input_full( 'submit', 'link', 0, 0, 'link', '' );
+    $h->put_input_hidden( 'gamma', $w->gamma() ? '1' : '0' );
+    $h->put_submit( $w->gamma() ? 'sw_night' : 'sw_light', $w->gamma() ? 'night' : 'light' );
+    $h->close( 3 );
 
-    $html->close();
+    $w->body( $h );
+    $h->close();
 
-    $html->open( 'td', ' align="right"' );
-    $html->input_full( 'submit', 'link', 0, 0, 'link', $a ? '' : 'r' );
-    $html->put_input_hidden( 'gamma', $is_lite ? '1' : '0' );
-    $html->put_submit( $is_lite ? 'sw_night' : 'sw_light', $is_lite ? 'night' : 'light' );
-    $html->close();
-    $html->close();
-    $html->close();
+    $h->put( '<hr>' );
+    $h->open( 'div', ' style="text-align: right;"' );
 
-    if( $a )
-    {
-        $html->put( '<hr>' );
-        $html->put( $a->html() );
-    }
-    else if( $w->log )
-    {
-        $html->put( '<hr>' );
-        $html->open( 'div', ' align="right"' );
-        $html->open( 'div', ' class="textarea"' );
-        $html->put( $w->log );
-        $html->close();
-        $html->close();
-    }
+    $h->put( '<a href="https://github.com/deemru/secqru">github/deemru/secqru</a>' );
+    $w->githead( $h );
+    $w->informer( $h );
 
-    $html->close();
-
-    $html->put( '<hr>' );
-    $html->open( 'div', ' style="text-align: right;"' );
-
-    $html->put( '<a href="https://github.com/deemru/secqru">github/deemru/secqru</a>' );
-
-    if( defined( 'SECQRU_GITHEAD' ) )
-    {
-        $temp = file_get_contents( '.git/FETCH_HEAD', null, null, 0, 40 );
-        $html->add( "/<a href=\"https://github.com/deemru/secqru/commit/$temp\">".substr( $temp, 0, 7 ).'</a>' );
-    }
-
-    if( defined( 'SECQRU_INFORMER' ) )
-    {
-        $html->add( '', 1 );
-        $html->put( '', 1 );
-        $html->put( explode( SECQRU_EOL, sprintf( SECQRU_INFORMER, $color_back, $color_back, $is_lite ? '0' : '1' ) ) );
-    }
-
-    echo $html->render();
+    $h->render();
 
     if( defined( 'SECQRU_DEBUG' ) )
         echo '<center><small>'.sprintf( 'Memory: %.02f KB', memory_get_peak_usage()/1024 ).'<br>'.sprintf( 'Speed: %.01f ms', 1000 * ( microtime( true ) - $_SERVER['REQUEST_TIME_FLOAT'] ) ).'</small></center>';

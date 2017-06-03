@@ -12,7 +12,7 @@ class secqru_app_tiklan
         $this->w = $w;
     }
 
-    public function put_buttons( secqru_html $html )
+    public function buttons( secqru_html $html )
     {
         $html->add( ' — ' );
         $html->put_submit( 'help', 'help' );
@@ -29,7 +29,12 @@ class secqru_app_tiklan
         return ~( 0xFFFFFFFF << 32 - $cidr ) & 0xFFFFFFFF;
     }
 
-    public function html()
+    public function link()
+    {
+        
+    }
+
+    public function html( secqru_html $html )
     {
         // RESET
         if( $this->w->get_set( 'reset' ) )
@@ -293,8 +298,7 @@ class secqru_app_tiklan
             $help = 0;
         }
 
-        $html = new secqru_html();
-
+        $html->put( '<hr>' );
         $html->open( 'table' );
         $html->open( 'tr' );
         {

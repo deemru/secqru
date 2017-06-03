@@ -2,8 +2,6 @@
 
 class secqru_app_ip
 {
-    private $w;
-
     private static $ATTRS = array( 'REMOTE_ADDR',
                                    'HTTP_CLIENT_IP',
                                    'HTTP_X_FORWARDED_FOR',
@@ -22,28 +20,11 @@ class secqru_app_ip
                                    'VIA',
                                    'PROXY_CONNECTION' );
 
-    private function getMainIP()
+    public function title()
     {
         foreach( self::$ATTRS as $attr )
             if( !empty( $_SERVER[$attr] ) )
                 return $_SERVER[$attr];
-    }
-
-    public function __construct( &$w )
-    {
-        $this->w = &$w;
-    }
-
-    // deprecated
-    public function get_title()
-    {
-        return self::getMainIP();
-    }
-
-    // api rework
-    public function prep()
-    {
-        $this->w->set_title( self::getMainIP() );
     }
 
     private function ip_render( $attr, &$out )
@@ -70,13 +51,13 @@ class secqru_app_ip
         $out .= sprintf( $html, $attr, $ip, $whois, $geoip, $dns, $ping, $mtr );
     }
 
-    public function html()
+    public function html( secqru_html $html )
     {
         $out = '';
 
         foreach( self::$ATTRS as $attr )
             self::ip_render( $attr, $out );
 
-        return explode( SECQRU_EOL, $out );
+        $html->put( explode( SECQRU_EOL, $out ) );
     }
 }

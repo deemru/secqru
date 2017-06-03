@@ -25,10 +25,9 @@ class secqru_app_ddns
             $this->db['status'] = self::STATUS_NULL;
     }
 
-    public function put_buttons( secqru_html $html )
+    public function buttons( secqru_html $html )
     {
         $html->add( ' — ' );
-        $html->put_submit( 'help', 'help' );
         $html->put_submit( 'reset', 'reset' );
     }
 
@@ -187,7 +186,7 @@ class secqru_app_ddns
         return true;
     }
 
-    public function prep()
+    public function init()
     {
         if( $this->w->get_set( 't' ) && $this->w->get_set( 'd' ) && $this->w->get_set( 'i' ) )
         {
@@ -245,7 +244,8 @@ class secqru_app_ddns
             case self::STATUS_NULL:
 
                 $this->db['status'] = self::STATUS_PDDTOKEN;
-                return;
+                if( !$this->w->get_set( 'tkn' ) )
+                    return;
 
             case self::STATUS_PDDTOKEN:
 
@@ -391,10 +391,14 @@ class secqru_app_ddns
         }
     }
 
-    public function html()
+    public function link()
     {
-        $html = new secqru_html();
+        
+    }
 
+    public function html( secqru_html $html )
+    {
+        $html->put( '<hr>' );
         $html->open( 'table' );
         $html->open( 'tr' );
         $html->open( 'td', ' valign="top" align="left"' );
@@ -402,7 +406,8 @@ class secqru_app_ddns
 
         for( ;; )
         {
-            $html->put_input_hidden( 'db', $this->w->put_db( $this->db ) );
+            if( sizeof( $this->db ) > 1 )
+                $html->put_input_hidden( 'db', $this->w->put_db( $this->db ) );
             $html->put_input_ro( self::FORMSIZE, 'pdd.yandex.ru' );
             $html->add( ' — DDNS provider', 1 );
 
@@ -534,7 +539,5 @@ class secqru_app_ddns
             $html->close();
         }
         $html->close();
-
-        return $html;
     }
 }
