@@ -45,7 +45,7 @@ class secqru_abcode
     private function map( $alphabet )
     {
         $map = array();
-        for( $i = 0; $i < strlen( $alphabet ); $i++ )
+        for( $i = 0, $n = strlen( $alphabet ); $i < $n; $i++ )
             $map[ $alphabet[$i] ] = $i;
         return $map;
     }
@@ -55,7 +55,7 @@ class secqru_abcode
         $q = gmp_init( sizeof( $from ) );
         $b = gmp_init( $from[ $data[0] ] );
 
-        for( $i = 1; $i < strlen( $data ); $i++ )
+        for( $i = 1, $n = strlen( $data ); $i < $n; $i++ )
             $b = gmp_add( $from[ $data[$i] ], gmp_mul( $b, $q ) );
 
         $q = gmp_init( strlen( $to ) );
@@ -77,7 +77,7 @@ class secqru_abcode
         $q = sizeof( $from );
         $b = $from[ $data[0] ];
 
-        for( $i = 1; $i < strlen( $data ); $i++ )
+        for( $i = 1, $n = strlen( $data ); $i < $n; $i++ )
             $b = bcadd( $from[ $data[$i] ], bcmul( $b, $q ) );
 
         $q = strlen( $to );
