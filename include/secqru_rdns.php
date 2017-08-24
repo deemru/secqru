@@ -113,7 +113,7 @@ class secqru_rdns
 
             $l = substr( $response, $shift + 10, 2 );
             $l = ( ord( $l[0] ) << 8 ) + ord( $l[1] );
-            
+
             if( strlen( $response ) - $shift - 12 < $l )
                 return false;
 
