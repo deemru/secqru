@@ -393,7 +393,6 @@ class secqru_app_ddns
 
     public function link()
     {
-        
     }
 
     public function html( secqru_html $html )

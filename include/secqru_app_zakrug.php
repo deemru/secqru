@@ -182,7 +182,7 @@ class secqru_app_zakrug
         }
     }
 
-    public function buttons( secqru_html $html )
+    public function buttons( /* secqru_html $html */ )
     {
         //$html->add( ' — ' );
         //$html->put_submit( 'help', 'help' );
@@ -274,7 +274,6 @@ class secqru_app_zakrug
 
     public function link()
     {
-        
     }
 
     private function get_img_uploaded( $file, &$type )

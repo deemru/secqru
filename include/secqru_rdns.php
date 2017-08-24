@@ -95,7 +95,7 @@ class secqru_rdns
 
         $a = substr( $response, 6, 2 );
         $a = ( ord( $a[0] ) << 8 ) + ord( $a[1] );
-        
+
         if( !$a )
             return false;
 

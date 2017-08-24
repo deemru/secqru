@@ -25,7 +25,6 @@ class secqru_app_rdns
 
     public function link()
     {
-        
     }
 
     public function html( secqru_html $html )
@@ -39,7 +38,7 @@ class secqru_app_rdns
         $html->put_input( 'ns', 15, 15, $this->ns );
         $html->add( ' — name server', 1 );
         $html->put_input( 'ip', 15, 15, $this->ip );
-        $html->put_submit( 'save', 'rdns' );        
+        $html->put_submit( 'save', 'rdns' );
 
         $html->close( 2 );
         $html->open( 'td', ' valign="top" align="right"' );

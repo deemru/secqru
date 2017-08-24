@@ -81,7 +81,6 @@ class secqru_abcode
             $b = bcadd( $from[ $data[$i] ], bcmul( $b, $q ) );
 
         $q = strlen( $to );
-        $z = 0;
 
         for( $i = 0;; $i++ )
         {

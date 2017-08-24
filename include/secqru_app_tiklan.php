@@ -31,7 +31,6 @@ class secqru_app_tiklan
 
     public function link()
     {
-        
     }
 
     public function html( secqru_html $html )
