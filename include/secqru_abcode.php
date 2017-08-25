@@ -28,6 +28,10 @@ class secqru_abcode
 
     public function encode( $data )
     {
+        for( $i = 0, $n = strlen( $data ); $i < $n; $i++ )
+            if( !isset( $this->bmap[ $data[$i] ] ) )
+                return false;
+
         if( $this->gmp )
             return self::convert_gmp( $data, $this->bmap, $this->a );
         else
@@ -36,6 +40,10 @@ class secqru_abcode
 
     public function decode( $data )
     {
+        for( $i = 0, $n = strlen( $data ); $i < $n; $i++ )
+            if( !isset( $this->amap[ $data[$i] ] ) )
+                return false;
+
         if( $this->gmp )
             return self::convert_gmp( $data, $this->amap, $this->b );
         else

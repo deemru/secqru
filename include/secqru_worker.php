@@ -192,8 +192,7 @@ class secqru_worker
             if( isset( $_POST['gamma'] ) )
                 unset( $_POST['gamma'] );
 
-            $cryptex = self::get_cryptex( SECQRU_PASS );
-            $link = $cryptex->cryptex( serialize( $_POST ) );
+            $link = self::cryptex( serialize( $_POST ) );
             $link = SECQRU_ADDR . $app . '/link/' . $link;
             exit( header( "Location: $link" ) );
         }
@@ -202,8 +201,7 @@ class secqru_worker
         if( !empty( $this->url[1] ) && $this->url[1] == 'link' &&
             !empty( $this->url[2] ) )
         {
-            $cryptex = self::get_cryptex( SECQRU_PASS );
-            $data = $cryptex->decryptex( $this->url[2] );
+            $data = self::decryptex( $this->url[2] );
 
             if( !$data )
                 exit( self::log( 'bad link', 3 ) );
@@ -223,14 +221,26 @@ class secqru_worker
 
     public function cryptex( $string )
     {
-        $cryptex = self::get_cryptex( SECQRU_PASS );
-        return $cryptex->cryptex( $string );
+        $cryptex = self::get_cryptex();
+        $abcode = self::get_abcode();
+
+        if( !( $string = gzdeflate( $string, 9 ) ) ||
+            !( $string = $cryptex->cryptex( $string ) ) ||
+            !( $string = $abcode->encode( $string ) ) )
+            return false;
+        return $string;
     }
 
     public function decryptex( $string )
     {
-        $cryptex = self::get_cryptex( SECQRU_PASS );
-        return $cryptex->decryptex( $string );
+        $cryptex = self::get_cryptex();
+        $abcode = self::get_abcode();
+
+        if( !( $string = $abcode->decode( $string ) ) ||
+            !( $string = $cryptex->decryptex( $string ) ) ||
+            !( $string = gzinflate( $string ) ) )
+            return false;
+        return $string;
     }
 
     public function get_cookie_apps( $apps )
@@ -384,10 +394,16 @@ a
         $html->put( explode( SECQRU_EOL, $style ) );
     }
 
-    private function get_cryptex( $password )
+    private function get_cryptex()
     {
         require_once 'secqru_cryptex.php';
-        return new secqru_cryptex( $password );
+        return new secqru_cryptex( $this->app . SECQRU_PASS );
+    }
+
+    private function get_abcode()
+    {
+        require_once 'secqru_abcode.php';
+        return new secqru_abcode( '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ' );
     }
 
     public function get_raw_link()
