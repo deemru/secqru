@@ -18,7 +18,7 @@ class secqru_abcode
 
         if( $base === false ) // binary
         {
-            $base = '';
+            $base = str_pad( '', 256 );
             for( $i = 0; $i < 256; $i++ )
                 $base[$i] = chr( $i );
         }
