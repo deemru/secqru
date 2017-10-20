@@ -7,6 +7,7 @@ class secqru_cryptex
     private $macsz;
     private $cbcsz;
     private $hash;
+    private $rndfn;
 
     public function __construct( $psw, $ivsz = 4, $macsz = 4,
                                  $hash = 'gost', $cbcsz = 32 )
@@ -16,20 +17,27 @@ class secqru_cryptex
         $this->macsz = $macsz;
         $this->cbcsz = $cbcsz;
         $this->hash = $hash;
+        if( function_exists( 'random_bytes' ) )
+            $this->rndfn = 2;
+        else if( function_exists( 'mcrypt_create_iv' ) )
+            $this->rndfn = 1;
+        else
+            $this->rndfn = 0;
     }
 
     public function rnd( $size = 8 )
     {
-        if( function_exists( 'random_bytes' ) )
-            return random_bytes( $size );
-        if( function_exists( 'mcrypt_create_iv' ) )
-            return mcrypt_create_iv( $size, MCRYPT_DEV_URANDOM );
-
-        $rnd = '';
-        while( $size-- )
-            $rnd .= chr( mt_rand() );
-
-        return $rnd;
+        switch( $this->rndfn )
+        {
+            case 2:
+                return random_bytes( $size );
+            case 1:
+                return mcrypt_create_iv( $size, MCRYPT_DEV_URANDOM );
+            case 0:
+                $rnd = '';
+                while( $size-- ) $rnd .= chr( mt_rand() );
+                return $rnd;
+        }
     }
 
     private function hash( $data )
