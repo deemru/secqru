@@ -73,9 +73,16 @@ class secqru_cryptex
 
     public function cryptex( $data )
     {
-        $iv = $this->ivsz ? self::rnd( $this->ivsz ) : ''; // iiv
-        $data = $iv . $data;
-        $iv = $this->ivsz ? self::rnd( $this->ivsz ) : ''; // oiv
+        if( $this->ivsz )
+        {
+            $data = self::rnd( $this->ivsz ) . $data; // inner iv
+            $iv = self::rnd( $this->ivsz ); // outer iv
+            if( $iv[0] === chr( 0 ) ) // exclude zero start
+                $iv[0] = chr( mt_rand() | 1 << mt_rand() % 8 );
+        }
+        else
+            $iv = '';
+
         $key = self::key( $iv );
         $mac = substr( self::hash( $key . $data ), -$this->macsz );
         $data = self::cbc( $iv . $mac, $key, $data, true );
