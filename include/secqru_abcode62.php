@@ -5,7 +5,7 @@ class secqru_abcode62
     private $cc;
     private $cs;
 
-    const AB62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    static private $ab62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
     public function __construct( $cc = '0', $cs = 0 )
     {
@@ -51,9 +51,9 @@ class secqru_abcode62
                 continue;
             }
 
-            $c = self::AB62[ ( $cs + ( mt_rand() % 15 ) * 4 + $n ) % 62 ];
+            $c = self::$ab62[ ( $cs + ( mt_rand() % 15 ) * 4 + $n ) % 62 ];
             $out .= $cc . $c;
-            $cc = self::AB62[ ( $cs + ord( $cc ) + ord( $c ) ) % 62 ];
+            $cc = self::$ab62[ ( $cs + ord( $cc ) + ord( $c ) ) % 62 ];
             $cs++;
         }
 
@@ -99,7 +99,7 @@ class secqru_abcode62
             else
                 $out .= '=';
 
-            $cc = self::AB62[ ( $cs + ord( $cc ) + $c ) % 62 ];
+            $cc = self::$ab62[ ( $cs + ord( $cc ) + $c ) % 62 ];
             $cs++;
         }
 
