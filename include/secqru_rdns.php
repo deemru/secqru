@@ -5,10 +5,10 @@ class secqru_rdns
 
     public function rdns( $ns, $ip )
     {
-        if( !( $q = self::rdns_get_query( $ip ) ) ) return $ip;
-        if( !( $r = self::rdns_get_response( $ns, $q ) ) ) return $ip;
-        if( !( $rdns = self::rdns_decode_response( $q, $r ) ) ) return $ip;
-        if( empty( $rdns[0] ) ) return $ip;
+        if( !( $q = self::rdns_get_query( $ip ) ) ) return false;
+        if( !( $r = self::rdns_get_response( $ns, $q ) ) ) return false;
+        if( !( $rdns = self::rdns_decode_response( $q, $r ) ) ) return true;
+        if( empty( $rdns[0] ) ) return true;
         return $rdns[0];
     }
 

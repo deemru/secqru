@@ -393,6 +393,7 @@ class secqru_app_ddns
 
     public function link()
     {
+        return $this->db['status'] > self::STATUS_PDDTOKEN;
     }
 
     public function html( secqru_html $html )

@@ -25,6 +25,7 @@ class secqru_app_rdns
 
     public function link()
     {
+        return false;
     }
 
     public function html( secqru_html $html )
@@ -44,10 +45,25 @@ class secqru_app_rdns
         $html->open( 'td', ' valign="top" align="right"' );
         $html->open( 'div', ' class="textarea"' );
 
+        if( $this->w->get_set( 'save' ) )
+        {
+            $t = microtime( true );
+            $rdns = self::rdns();
+            $t = ( microtime( true ) - $t ) * 1000;
+            if( $t < 10 )
+                $t = sprintf( "%.02f", $t );
+            else
+                $t = round( $t );
+            if( false === $rdns )
+                $this->w->log( "timeout for \"{$this->ip}\" ($t ms)", 2 );
+            else if( true === $rdns )
+                $this->w->log( "no record for \"{$this->ip}\" ($t ms)", 1 );
+            else
+                $this->w->log( "\"$rdns\" ($t ms)", 7 );
+        }
+
         if( $this->w->log )
             $html->put( $this->w->log, 1 );
-
-        $html->put( self::rdns() );
 
         $html->close( 3 );
     }

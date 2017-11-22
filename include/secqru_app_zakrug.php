@@ -274,6 +274,7 @@ class secqru_app_zakrug
 
     public function link()
     {
+        return true;
     }
 
     private function get_img_uploaded( $file, &$type )

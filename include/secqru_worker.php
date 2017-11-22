@@ -82,7 +82,7 @@ class secqru_worker
 
     public function is_link()
     {
-        return method_exists( $this->a, 'link' );
+        return method_exists( $this->a, 'link' ) ? $this->a->link() : false;
     }
 
     public function gamma()
