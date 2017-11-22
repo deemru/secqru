@@ -77,8 +77,6 @@ class secqru_cryptex
         {
             $data = self::rnd( $this->ivsz ) . $data; // inner iv
             $iv = self::rnd( $this->ivsz ); // outer iv
-            if( $iv[0] === chr( 0 ) ) // exclude zero start
-                $iv[0] = chr( mt_rand() | 1 << mt_rand() % 8 );
         }
         else
             $iv = '';

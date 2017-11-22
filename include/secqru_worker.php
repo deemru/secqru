@@ -222,11 +222,11 @@ class secqru_worker
     public function cryptex( $string )
     {
         $cryptex = self::get_cryptex();
-        $abcode = self::get_abcode();
+        $abcode62 = self::get_abcode62();
 
-        if( !( $string = gzdeflate( $string, 9 ) ) ||
-            !( $string = $cryptex->cryptex( $string ) ) ||
-            !( $string = $abcode->encode( $string ) ) )
+        if( false === ( $string = gzdeflate( $string, 9 ) ) ||
+            false === ( $string = $cryptex->cryptex( $string ) ) ||
+            false === ( $string = $abcode62->encode( $string ) ) )
             return false;
         return $string;
     }
@@ -234,11 +234,11 @@ class secqru_worker
     public function decryptex( $string )
     {
         $cryptex = self::get_cryptex();
-        $abcode = self::get_abcode();
+        $abcode62 = self::get_abcode62();
 
-        if( !( $string = $abcode->decode( $string ) ) ||
-            !( $string = $cryptex->decryptex( $string ) ) ||
-            !( $string = gzinflate( $string ) ) )
+        if( false === ( $string = $abcode62->decode( $string ) ) ||
+            false === ( $string = $cryptex->decryptex( $string ) ) ||
+            false === ( $string = gzinflate( $string ) ) )
             return false;
         return $string;
     }
@@ -400,10 +400,10 @@ a
         return new secqru_cryptex( $this->app . SECQRU_PASS );
     }
 
-    private function get_abcode()
+    private function get_abcode62()
     {
-        require_once 'secqru_abcode.php';
-        return new secqru_abcode( '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+        require_once 'secqru_abcode62.php';
+        return new secqru_abcode62();
     }
 
     public function get_raw_link()
