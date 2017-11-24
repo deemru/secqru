@@ -44,14 +44,14 @@ class secqru_abcode62
             elseif( $c == '/' )
                 $n = 2;
             elseif( $c == '=' )
-                $n = 3;
+                continue;
             else
             {
                 $out .= $c;
                 continue;
             }
 
-            $c = self::$ab62[ ( $cs + ( mt_rand() % 15 ) * 4 + $n ) % 62 ];
+            $c = self::$ab62[ ( $cs + ( mt_rand() % 20 ) * 3 + $n ) % 62 ];
             $out .= $cc . $c;
             $cc = self::$ab62[ ( $cs + ord( $cc ) + ord( $c ) ) % 62 ];
             $cs++;
@@ -82,11 +82,11 @@ class secqru_abcode62
 
             $c = ord( $data[$i] );
             if( $c >= 48 && $c <= 57 )
-                $n = ( $c + 14 - ( $cs % 62 ) ) % 62 % 4;
+                $n = ( $c + 14 - ( $cs % 62 ) ) % 62 % 3;
             else if( $c >= 97 && $c <= 122 )
-                $n = ( $c - 25 - ( $cs % 62 ) ) % 62 % 4;
+                $n = ( $c - 25 - ( $cs % 62 ) ) % 62 % 3;
             else if( $c >= 65 && $c <= 90 )
-                $n = ( $c + 33 - ( $cs % 62 ) ) % 62 % 4;
+                $n = ( $c + 33 - ( $cs % 62 ) ) % 62 % 3;
             else
                 return false;
 
@@ -94,10 +94,8 @@ class secqru_abcode62
                 $out .= $cc;
             elseif( $n == 1 )
                 $out .= '+';
-            elseif( $n == 2 )
-                $out .= '/';
             else
-                $out .= '=';
+                $out .= '/';
 
             $cc = self::$ab62[ ( $cs + ord( $cc ) + $c ) % 62 ];
             $cs++;
