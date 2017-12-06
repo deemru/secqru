@@ -9,14 +9,14 @@ class secqru_cryptex
     private $hash;
     private $rndfn;
 
-    public function __construct( $psw, $ivsz = 4, $macsz = 4,
-                                 $hash = 'gost', $cbcsz = 32 )
+    public function __construct( $psw, $ivsz = 4, $macsz = 4, $hash = 'sha256' )
     {
         $this->psw = $psw;
-        $this->ivsz = $ivsz;
-        $this->macsz = $macsz;
-        $this->cbcsz = $cbcsz;
         $this->hash = $hash;
+        $this->ivsz = max( 0, $ivsz );
+        $this->cbcsz = strlen( self::hash( '' ) );
+        $this->macsz = min( $macsz, $this->cbcsz );
+
         if( function_exists( 'random_bytes' ) )
             $this->rndfn = 2;
         else if( function_exists( 'mcrypt_create_iv' ) )
@@ -27,17 +27,14 @@ class secqru_cryptex
 
     public function rnd( $size = 8 )
     {
-        switch( $this->rndfn )
-        {
-            case 2:
-                return random_bytes( $size );
-            case 1:
-                return mcrypt_create_iv( $size, MCRYPT_DEV_URANDOM );
-            case 0:
-                $rnd = '';
-                while( $size-- ) $rnd .= chr( mt_rand() );
-                return $rnd;
-        }
+        if( $this->rndfn === 2 )
+            return random_bytes( $size );
+        if( $this->rndfn === 1 )
+            return mcrypt_create_iv( $size );
+
+        $rnd = '';
+        while( $size-- ) $rnd .= chr( mt_rand() );
+        return $rnd;
     }
 
     private function hash( $data )
@@ -45,46 +42,43 @@ class secqru_cryptex
         return hash( $this->hash, $data, true );
     }
 
-    private function cbc( $iv, $key, $data, $encrypt )
+    private function cbc( $v, $k, $d, $e = false )
     {
-        for( $i = 0, $n = strlen( $data ); $i < $n; $i++ )
+        $s = $this->cbcsz;
+        $n = strlen( $d );
+        $k = self::hash( $v . $k );
+        $o = $d;
+
+        for( $i = 0, $j = 0; $i < $n; $i++, $j++ )
         {
-            if( ( $i % $this->cbcsz ) == 0 )
+            if( $j == $s )
             {
-                if( $encrypt && $i )
-                    $iv = substr( $data, $i - $this->cbcsz, $this->cbcsz );
-
-                $crypta = self::hash( $iv . $key );
-
-                if( !$encrypt )
-                    $iv = substr( $data, $i, $this->cbcsz );
+                $k = self::hash( substr( $e ? $o : $d, $i - $j, $j ) . $k );
+                $j = 0;
             }
 
-            $data[$i] = $data[$i] ^ $crypta[ $i % $this->cbcsz ];
+            $o[$i] = $d[$i] ^ $k[$j];
         }
 
-        return $data;
-    }
-
-    private function key( $iv )
-    {
-        return self::hash( $this->psw . $iv );
+        return $o;
     }
 
     public function cryptex( $data )
     {
         if( $this->ivsz )
         {
-            $data = self::rnd( $this->ivsz ) . $data; // inner iv
-            $iv = self::rnd( $this->ivsz ); // outer iv
+            $iv = self::rnd( $this->ivsz );
+            $data = self::rnd( $this->ivsz ) . $data;
         }
         else
             $iv = '';
 
-        $key = self::key( $iv );
-        $mac = substr( self::hash( $key . $data ), -$this->macsz );
-        $data = self::cbc( $iv . $mac, $key, $data, true );
-        return $iv . $mac . $data;
+        $key = self::hash( $iv . $this->psw );
+
+        if( $this->macsz )
+            $iv .= substr( self::hash( $data . $key ), 0, $this->macsz );
+
+        return $iv . self::cbc( $iv, $key, $data, true );
     }
 
     public function decryptex( $data )
@@ -92,15 +86,14 @@ class secqru_cryptex
         if( strlen( $data ) < 2 * $this->ivsz + $this->macsz )
             return false;
 
-        $iv = substr( $data, 0, $this->ivsz );
+        $key = self::hash( substr( $data, 0, $this->ivsz ) . $this->psw );
         $mac = substr( $data, $this->ivsz, $this->macsz );
-        $data = substr( $data, $this->ivsz + $this->macsz );
-        $key = self::key( $iv );
-        $data = self::cbc( $iv . $mac, $key, $data, false );
+        $data = self::cbc( substr( $data, 0, $this->ivsz + $this->macsz ),
+                           $key, substr( $data, $this->macsz + $this->ivsz ) );
 
-        if( $mac != substr( self::hash( $key . $data ), -$this->macsz ) )
+        if( $mac !== substr( self::hash( $data . $key ), 0, $this->macsz ) )
             return false;
 
-        return substr( $data, $this->ivsz ); // skip inner iv
+        return substr( $data, $this->ivsz );
     }
 }
