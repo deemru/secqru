@@ -10,7 +10,7 @@ function test_secqru_cryptex()
 {
     $hashes = array( 'md5', 'sha1', 'sha256', 'gost' );
     $pass_sizes = array( 0, 1, 16, 128 );
-    $sizes = array( 1, 3, 7, 31, 32, 33, 337, 1337, 4095, 4096, 4097 );
+    $sizes = array( 1, 3, 7, 31, 32, 33, 337, 1337 );
     $ivszs = array( 0, 1, 2, 3, 4, 8, 16, 32 );
     $macszs = array( 0, 1, 2, 3, 4, 8, 16, 32 );
     foreach( $hashes as $hash )
