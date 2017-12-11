@@ -49,6 +49,7 @@ function test_secqru_cryptex()
                     var_dump( $cryptex );
                     exit( 1 );
                 }
+                echo '.';
             }
         }
 
