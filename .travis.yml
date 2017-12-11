@@ -7,6 +7,12 @@ php:
   - 7.1
   - 7.2
   - nightly
+before_install:
+  - echo before_install
+  - phpenv config-rm xdebug.ini || echo "no xdebug"
+  - echo memory_limit = -1 >> $INI
+install:
+  - echo install
 script:
   - find . -type f -name "*.php" -print0 | xargs -0 -n1 -P8 php -l
   - php test/test_secqru_cryptex.php
