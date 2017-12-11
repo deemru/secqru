@@ -219,28 +219,34 @@ class secqru_worker
         $this->a = new $classname( $this );
     }
 
-    public function cryptex( $string )
+    public function cryptex( $data )
     {
         $cryptex = self::get_cryptex();
         $abcode62 = self::get_abcode62();
 
-        if( false === ( $string = gzdeflate( $string, 9 ) ) ||
-            false === ( $string = $cryptex->cryptex( $string ) ) ||
-            false === ( $string = $abcode62->encode( $string ) ) )
-            return false;
-        return $string;
+        if( false !== ( $enc = gzdeflate( $data, 9 ) ) &&
+            false !== ( $enc = $cryptex->cryptex( $enc ) ) )
+            return $abcode62->encode( $enc );
+
+        return false;
     }
 
-    public function decryptex( $string )
+    public function decryptex( $data )
     {
         $cryptex = self::get_cryptex();
         $abcode62 = self::get_abcode62();
 
-        if( false === ( $string = $abcode62->decode( $string ) ) ||
-            false === ( $string = $cryptex->decryptex( $string ) ) ||
-            false === ( $string = gzinflate( $string ) ) )
-            return false;
-        return $string;
+        if( false !== ( $dec = $abcode62->decode( $data ) ) &&
+            false !== ( $dec = $cryptex->decryptex( $dec ) ) )
+            return gzinflate( $dec );
+
+        return self::decryptex_old( $data );
+    }
+
+    private function decryptex_old( $data )
+    {
+        require_once 'secqru_cryptex_old.php';
+        return ( new secqru_cryptex_old( SECQRU_PASS ) )->decryptex( $data );
     }
 
     public function get_cookie_apps( $apps )

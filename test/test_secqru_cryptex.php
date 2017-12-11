@@ -2,7 +2,7 @@
 
 function get_cryptex( $pass, $ivsz, $macsz, $hash )
 {
-    require_once '../include/secqru_cryptex.php';
+    require_once __DIR__ . '/../include/secqru_cryptex.php';
     return new secqru_cryptex( $pass, $ivsz, $macsz, $hash );
 }
 
@@ -14,43 +14,49 @@ function test_secqru_cryptex()
     $ivszs = array( 0, 1, 2, 3, 4, 8, 16, 32 );
     $macszs = array( 0, 1, 2, 3, 4, 8, 16, 32 );
     foreach( $hashes as $hash )
-    foreach( $pass_sizes as $pass_size )
-    foreach( $ivszs as $ivsz )
-    foreach( $macszs as $macsz )
     {
-        $pass = '';
-        for( $i = 0; $i < $pass_size; $i++ )
-            $pass .= chr( mt_rand() );
-
-        $cryptex = get_cryptex( $pass, $ivsz, $macsz, $hash );
-        $decryptex = get_cryptex( $pass, $ivsz, $macsz, $hash );
-
-        foreach( $sizes as $size )
+        $t = microtime( true );
+        foreach( $pass_sizes as $pass_size )
+        foreach( $ivszs as $ivsz )
+        foreach( $macszs as $macsz )
         {
-            $rnd = '';
-            for( $i = 0; $i < $size; $i++ )
-                $rnd .= chr( mt_rand() );
+            $pass = '';
+            for( $i = 0; $i < $pass_size; $i++ )
+                $pass .= chr( mt_rand() );
 
-            $encoded = $cryptex->cryptex( $rnd );
-            $decoded = $decryptex->decryptex( $encoded );
+            $cryptex = get_cryptex( $pass, $ivsz, $macsz, $hash );
+            $decryptex = get_cryptex( $pass, $ivsz, $macsz, $hash );
 
-            if( $decoded !== $rnd )
+            foreach( $sizes as $size )
             {
-                var_dump( $pass );
-                var_dump( $ivsz );
-                var_dump( $macsz );
-                var_dump( $hash );
-                var_dump( bin2hex( $rnd ) );
-                var_dump( bin2hex( $encoded ) );
-                var_dump( bin2hex( $decoded ) );
-                var_dump( $cryptex );
-                return 0;
+                $rnd = '';
+                for( $i = 0; $i < $size; $i++ )
+                    $rnd .= chr( mt_rand() );
+
+                $encoded = $cryptex->cryptex( $rnd );
+                $decoded = $decryptex->decryptex( $encoded );
+
+                if( $decoded !== $rnd )
+                {
+                    echo 'ERROR: ';
+                    var_dump( $pass );
+                    var_dump( $ivsz );
+                    var_dump( $macsz );
+                    var_dump( $hash );
+                    var_dump( bin2hex( $rnd ) );
+                    var_dump( bin2hex( $encoded ) );
+                    var_dump( bin2hex( $decoded ) );
+                    var_dump( $cryptex );
+                    exit( 1 );
+                }
             }
         }
-    }
 
-    return 1;
+        echo sprintf( "$hash: %d ms\r\n", round( 1000 * ( microtime( true ) - $t ) ) );
+    }
 }
+
 $t = microtime( true );
 test_secqru_cryptex();
-echo sprintf( "%.08f\r\n", microtime( true ) - $t );
+echo sprintf( "--\r\nSUCCESS: %d ms\r\n", round( 1000 * ( microtime( true ) - $t ) ) );
+exit( 0 );
