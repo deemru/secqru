@@ -10,7 +10,6 @@ php:
 before_install:
   - echo before_install
   - phpenv config-rm xdebug.ini || echo "no xdebug"
-  - echo memory_limit = -1 >> $INI
 install:
   - echo install
 script:
