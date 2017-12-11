@@ -1,4 +1,5 @@
 # secqru
+[![travis](https://img.shields.io/travis/deemru/secqru.svg?label=travis)](https://travis-ci.org/deemru/secqru) 
 [![codacy](https://img.shields.io/codacy/grade/c42fc1490b214bf89b22d7ca225592be.svg?label=codacy)](https://www.codacy.com/app/deem/secqru) [![sensiolabs](https://img.shields.io/sensiolabs/i/c85f6208-3023-4fb5-9452-cd4317f3d12b.svg?label=sensiolabs)](https://insight.sensiolabs.com/projects/c85f6208-3023-4fb5-9452-cd4317f3d12b)
 
 [secqru](https://github.com/deemru/secqru) is a simple PHP platform for various applications
@@ -9,6 +10,7 @@
 - [tiklan](https://secq.ru/tiklan) — makes a broadcast domain between Mikrotik routers
 - [zakrug](https://secq.ru/zakrug) — adds beautiful rounded corners to your images
 - [ddns](https://secq.ru/ddns) — fast ddns-links management (pdd.yandex.ru)
+- [rdns](https://secq.ru/rdns) — reverse dns lookup
 
 # Requirements
 
