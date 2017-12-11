@@ -9,10 +9,19 @@ function get_cryptex( $pass, $ivsz, $macsz, $hash )
 function test_secqru_cryptex()
 {
     $hashes = array( 'md5', 'sha1', 'sha256', 'gost' );
-    $pass_sizes = array( 0, 1, 16, 128 );
-    $sizes = array( 1, 3, 7, 31, 32, 33, 337, 1337 );
-    $ivszs = array( 0, 1, 2, 3, 4, 8, 16, 32 );
-    $macszs = array( 0, 1, 2, 3, 4, 8, 16, 32 );
+    $pass_sizes = array( 32 );
+    $sizes = array( 1337 );
+    $ivszs = array( 4 );
+    $macszs = array( 4 );
+
+    if( version_compare( PHP_VERSION, '5.6.0' ) >= 0 )
+    {
+        $pass_sizes = array_merge( $pass_sizes, array( 0, 1, 16, 128 ) );
+        $sizes = array_merge( $sizes, array( 1, 3, 7, 31, 32, 33, 337 ) );
+        $ivszs = array_merge( $ivszs, array( 0, 1, 2, 3, 8, 16, 32 ) );
+        $macszs = array_merge( $macszs, array( 0, 1, 2, 3, 8, 16, 32 ) );
+    }
+
     foreach( $hashes as $hash )
     {
         $t = microtime( true );
@@ -49,7 +58,6 @@ function test_secqru_cryptex()
                     var_dump( $cryptex );
                     exit( 1 );
                 }
-                echo '.';
             }
         }
 
