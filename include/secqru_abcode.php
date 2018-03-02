@@ -28,26 +28,54 @@ class secqru_abcode
 
     public function encode( $data )
     {
+        $z = '';
+        for( $i = 0, $n = strlen( $data ); $i < $n; $i++ )
+            if( $data[$i] === $this->b[0] )
+                $z .= $this->a[0];
+            else
+            {
+                if( $i )
+                    $data = substr( $data, $i );
+                break;
+            }
+
+        if( $i == $n )
+            return $z;
+
         for( $i = 0, $n = strlen( $data ); $i < $n; $i++ )
             if( !isset( $this->bmap[ $data[$i] ] ) )
                 return false;
 
         if( $this->gmp )
-            return self::convert_gmp( $data, $this->bmap, $this->a );
+            return $z . self::convert_gmp( $data, $this->bmap, $this->a );
         else
-            return self::convert_bc( $data, $this->bmap, $this->a );
+            return $z . self::convert_bc( $data, $this->bmap, $this->a );
     }
 
     public function decode( $data )
     {
+        $z = '';
+        for( $i = 0, $n = strlen( $data ); $i < $n; $i++ )
+            if( $data[$i] === $this->a[0] )
+                $z .= $this->b[0];
+            else
+            {
+                if( $i )
+                    $data = substr( $data, $i );
+                break;
+            }
+
+        if( $i == $n )
+            return $z;
+
         for( $i = 0, $n = strlen( $data ); $i < $n; $i++ )
             if( !isset( $this->amap[ $data[$i] ] ) )
                 return false;
 
         if( $this->gmp )
-            return self::convert_gmp( $data, $this->amap, $this->b );
+            return $z . self::convert_gmp( $data, $this->amap, $this->b );
         else
-            return self::convert_bc( $data, $this->amap, $this->b );
+            return $z . self::convert_bc( $data, $this->amap, $this->b );
     }
 
     private function map( $alphabet )
