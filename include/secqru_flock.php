@@ -24,24 +24,29 @@ class secqru_flock
 
     public function open( $access = 'a+' )
     {
-        self::close();
-
         $this->fp = fopen( $this->filename, $access );
 
         if( $this->fp === false )
             return false;
 
         $timer = 0;
-        do
+        $mode = $access[0] == 'r' ? LOCK_SH : LOCK_EX;
+        $blocking = $this->delay ? LOCK_NB : 0;
+
+        for( ;; )
         {
-            if( flock( $this->fp, LOCK_EX | LOCK_NB ) )
-                return 1;
+            if( flock( $this->fp, $mode | $blocking ) )
+                return true;
+
+            $timer += $this->delay;
+            if( $timer > $this->timeout )
+                break;
 
             usleep( $this->delay );
-            $timer += $this->delay;
         }
-        while( $timer < $this->timeout );
 
+        fclose( $this->fp );
+        $this->fp = false;
         return false;
     }
 
@@ -57,13 +62,31 @@ class secqru_flock
 
     public function append( $data )
     {
-        self::close();
-
         if( self::open( 'a+' ) === false )
             return false;
 
         fwrite( $this->fp, $data );
         self::close();
         return true;
+    }
+
+    public function get()
+    {
+        if( self::open( 'r' ) === false )
+            return false;
+
+        $data = fread( $this->fp, filesize( $this->filename ) );
+        self::close();
+        return $data;
+    }
+
+    public function put( $data )
+    {
+        if( self::open( 'w+' ) === false )
+            return false;
+
+        fwrite( $this->fp, $data );
+        self::close();
+        return $data;
     }
 }
