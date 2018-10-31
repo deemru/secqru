@@ -524,7 +524,6 @@ class secqru_app_tiklan
                     $ppp_client_name = "$g_lan-$g_vpn-Client-{$subnets[$s]['name']}";
                     $ospf_costs[] = "routing ospf interface add interface=\"$ppp_client_name\" network-type=point-to-point cost={$subnets[$s]['cost']}";
                     $ppp_clients[] = "interface {$vpn_protocols[$g_vpn]}-client add connect-to=\"{$subnets[$s]['pub']}\" name=\"$ppp_client_name\" user=\"$g_lan-{$subnets[$i]['name']}\" password=\"{$subnets[$i]['psw']}\" profile=default-encryption keepalive-timeout=$ppp_timeout disabled=no";
-                    $ppp_clients[] = "ip neighbor discovery set \"$ppp_client_name\" discover=no";
                 }
                 else if( $is_server )
                 {
@@ -532,7 +531,6 @@ class secqru_app_tiklan
                     $ospf_costs[] = "routing ospf interface add interface=\"$ppp_server_name\" network-type=point-to-point cost={$subnets[$s]['cost']}";
                     $ppp_users[] = "ppp secret add name=\"$g_lan-{$subnets[$s]['name']}\" password=\"{$subnets[$s]['psw']}\" profile=default-encryption local-address={$subnets[$i]['addr_vpn']} remote-address={$subnets[$s]['addr_vpn']}";
                     $ppp_servers[] = "interface {$vpn_protocols[$g_vpn]}-server add name=\"$ppp_server_name\" user=\"$g_lan-{$subnets[$s]['name']}\"";
-                    $ppp_servers[] = "ip neighbor discovery set \"$ppp_server_name\" discover=no";
                 }
             }
         }
@@ -575,7 +573,6 @@ class secqru_app_tiklan
                 $eoip_id_direct = $subnets[ min( $i, $s ) ]['eoip_direct'] + max( $i, $s ) - 2;
 
                 $eoip_interface[] = "interface eoip add name=\"$eoip_name_direct\" !keepalive remote-address={$subnets[$s]['addr_vpn']} tunnel-id=$eoip_id_direct";
-                $eoip_interface[] = "ip neighbor discovery set \"$eoip_name_direct\" discover=no";
                 $eoip_to_bridge[] = "interface bridge port add bridge=\"$g_lan\" interface=\"$eoip_name_direct\" horizon=$g_horizon";
                 $eoip_bridge_filter[] = "interface list member add interface=\"$eoip_name_direct\" list=\"$filter_list\"";
             }
