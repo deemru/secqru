@@ -164,10 +164,12 @@ class secqru_app_ddns
         $count = sizeof( $records );
         for( $i = 0, $n = 0; $i < $count; $i++ )
         {
+            if( empty( $records[$i]->{'content'} ) )
+                continue;
+
             if( empty( $records[$i]->{'type'} ) ||
                 empty( $records[$i]->{'fqdn'} ) ||
-                empty( $records[$i]->{'record_id'} ) ||
-                empty( $records[$i]->{'content'} ) )
+                empty( $records[$i]->{'record_id'} ) )
             {
                 $this->db['records'] = array();
                 $this->w->log( "json bad format", 2 );
