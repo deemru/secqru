@@ -11,6 +11,8 @@ class secqru_worker
     private $home;
 
     private $gamma;
+    private $color;
+    private $title;
 
     public function ezlog( $message, $print, $value, $level = 0 ) {
         return self::log( "$message \"$print\" = \"$value\"", $level );
@@ -80,6 +82,13 @@ class secqru_worker
             $this->a->init();
     }
 
+    public function raw()
+    {
+        if( method_exists( $this->a, 'raw' ) )
+            return $this->a->raw();
+        return false;
+    }
+
     public function is_link()
     {
         return method_exists( $this->a, 'link' ) ? $this->a->link() : false;
@@ -104,7 +113,7 @@ class secqru_worker
     {
         if( defined( 'SECQRU_GITHEAD' ) &&  file_exists( SECQRU_GITHEAD ) )
         {
-            $rev = file_get_contents( SECQRU_GITHEAD, null, null, 0, 40 );
+            $rev = file_get_contents( SECQRU_GITHEAD, false, null, 0, 40 );
             $html->add( "/<a href=\"https://github.com/deemru/secqru/commit/$rev\">".substr( $rev, 0, 7 ).'</a>' );
         }
     }

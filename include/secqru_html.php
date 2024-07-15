@@ -106,7 +106,7 @@ class secqru_html
     {
         $br = $br ? '<br>' : '';
 
-        if( is_a( $value, get_class() ) )
+        if( is_a( $value, get_class( $this ) ) )
         {
             while( $value->close() );
             $n = sizeof( $value->strs );

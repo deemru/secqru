@@ -30,6 +30,10 @@
     $w->app_log();
     $w->app_init();
 
+    $raw = $w->raw();
+    if( $raw !== false )
+        exit( $raw );
+
     require_once 'include/secqru_html.php';
     $h = new secqru_html();
 

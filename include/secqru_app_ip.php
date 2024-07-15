@@ -2,6 +2,13 @@
 
 class secqru_app_ip
 {
+    private $w;
+
+    public function __construct( secqru_worker $w )
+    {
+        $this->w = $w;
+    }
+
     private static $ATTRS = array( 'REMOTE_ADDR',
                                    'HTTP_CLIENT_IP',
                                    'HTTP_X_FORWARDED_FOR',
@@ -59,5 +66,12 @@ class secqru_app_ip
             self::ip_render( $attr, $out );
 
         $html->put( explode( SECQRU_EOL, $out ) );
+    }
+
+    public function raw()
+    {
+        if( isset( $this->w->url[1] ) && $this->w->url[1] === 'raw' )
+            return $this->title();
+        return false;
     }
 }
