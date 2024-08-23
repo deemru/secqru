@@ -1,5 +1,7 @@
 <?php
 
+use Composer\CaBundle\CaBundle;
+
 class secqru_app_ddns
 {
     private $w;
@@ -64,7 +66,7 @@ class secqru_app_ddns
             CURLOPT_CONNECTTIMEOUT  => 10,
             CURLOPT_TIMEOUT         => 10,
             CURLOPT_HTTPHEADER      => array( "PddToken: {$this->db['token']}" ),
-            CURLOPT_CAINFO          => 'var/ca/yandex.ru',
+            CURLOPT_CAINFO          => CaBundle::getBundledCaBundlePath(),
             CURLOPT_URL             => $url
         ) ) )
             exit( $this->w->log( 'curl_setopt_array failed', 3 ) );
