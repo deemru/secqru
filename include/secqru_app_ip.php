@@ -47,15 +47,15 @@ class secqru_app_ip
 </div>';
 
         $ip = $_SERVER[$attr];
-        $whois = "<a href=\"http://api.hackertarget.com/whois/?q=$ip\">whois</a>";
-        $geoip = "<a href=\"http://api.hackertarget.com/geoip/?q=$ip\">geoip</a>";
-        $dns = "<a href=\"http://api.hackertarget.com/reversedns/?q=$ip\">dns</a>";
-        $ping = "<a href=\"http://api.hackertarget.com/nping/?q=$ip\">ping</a>";
-        $mtr = "<a href=\"http://api.hackertarget.com/mtr/?q=$ip\">trace</a>";
+        $w1 = "<a href=\"https://ipinfo.io/widget/demo/$ip\">ipinfo</a>";
+        $w2 = "<a href=\"https://db-ip.com/$ip\">db-ip</a>";
+        $w3 = "<a href=\"https://www.whois.com/whois/$ip\">whois</a>";
+        $w4 = "<a href=\"https://whois.ru/$ip\">whois</a>";
+        $w5 = "<a href=\"https://whois.domaintools.com/$ip\">domaintools</a>";
 
         if( $out )
             $out .= '<br>' . SECQRU_EOL;
-        $out .= sprintf( $html, $attr, $ip, $whois, $geoip, $dns, $ping, $mtr );
+        $out .= sprintf( $html, $attr, $ip, $w2, $w1, $w3, $w4, $w5 );
     }
 
     public function html( secqru_html $html )
