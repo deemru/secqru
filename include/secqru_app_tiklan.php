@@ -157,6 +157,15 @@ class secqru_app_tiklan
             $subnets[$i]['dhcp_pool_name'] = "$g_lan ({$subnets[$i]['name']}) Pool";
             $subnets[$i]['dhcp_server_name'] = "$g_lan ({$subnets[$i]['name']}) DHCP";
             $subnets[$i]['psw'] = $g_psw_prefix . substr( sha1( $g_psw . $subnets[$i]['name'] ), -8 );
+
+            // SUBNET ROUTEROS VERSION
+            $subnets[$i]['ros'] = $this->w->get_dns( "ros$i:routeros version $i", 'v6' );
+            $ros_versions = array( 'v6', 'v7' );
+            if( !in_array( $subnets[$i]['ros'], $ros_versions ) )
+            {
+                $subnets[$i]['ros'] = 'v6';
+                $this->w->ezlog( 'default', $subnets[$i]['name'], $subnets[$i]['ros'], 1 );
+            }
         }
 
         // TUNNEL ID CALC
@@ -425,6 +434,14 @@ class secqru_app_tiklan
 
                 $html->input_full( 'text', 0, self::FORMSIZE, 0, "{$subnets[$i]['addr_dhcp_first']} - {$subnets[$i]['addr_dhcp_last']}", 'r' );
                 $html->add( ' — DHCP pool', 1 );
+
+                $html->open_select( "ros$i" );
+                {
+                    foreach( $ros_versions as $temp )
+                        $html->put_option( $temp, $temp, $subnets[$i]['ros'] == $temp );
+                }
+                $html->close();
+                $html->add( ' — RouterOS version', 1 );
             }
             $html->close();
             $html->close();
@@ -445,6 +462,7 @@ class secqru_app_tiklan
         $config = array();
 
         $filter_list = $g_lan . '-Remotes';
+        $v7 = $subnets[$i]['ros'] == 'v7';
 
         // GATEWAY OR NEWBIE
         if( !$g_sel || ( $g_sel && $g_sel == $i ) )
@@ -458,9 +476,17 @@ class secqru_app_tiklan
 
             // OSPF Routes
             $config[] = "# OSPF Routes ({$subnets[$i]['name']})";
-            $config[] = "routing ospf instance add name=\"$g_lan\" router-id={$subnets[$i]['addr_vpn']}";
-            $config[] = "routing ospf area add name=\"$g_lan\" instance=\"$g_lan\" area-id={$subnets[0]['addr_subnet']}";
-            $config[] = "routing ospf network add network={$subnets[0]['addr_subnet']}/24 area=\"$g_lan\"";
+            if( $v7 )
+            {
+                $config[] = "routing ospf instance add name=\"$g_lan\" version=2 router-id={$subnets[$i]['addr_vpn']}";
+                $config[] = "routing ospf area add name=\"$g_lan\" instance=\"$g_lan\" area-id={$subnets[0]['addr_subnet']}";
+            }
+            else
+            {
+                $config[] = "routing ospf instance add name=\"$g_lan\" router-id={$subnets[$i]['addr_vpn']}";
+                $config[] = "routing ospf area add name=\"$g_lan\" instance=\"$g_lan\" area-id={$subnets[0]['addr_subnet']}";
+                $config[] = "routing ospf network add network={$subnets[0]['addr_subnet']}/24 area=\"$g_lan\"";
+            }
             $config[] = '';
 
             // DHCP
@@ -522,13 +548,19 @@ class secqru_app_tiklan
                 if( $is_client )
                 {
                     $ppp_client_name = "$g_lan-$g_vpn-Client-{$subnets[$s]['name']}";
-                    $ospf_costs[] = "routing ospf interface add interface=\"$ppp_client_name\" network-type=point-to-point cost={$subnets[$s]['cost']}";
+                    if( $v7 )
+                        $ospf_costs[] = "routing ospf interface-template add interfaces=\"$ppp_client_name\" area=\"$g_lan\" type=ptp cost={$subnets[$s]['cost']}";
+                    else
+                        $ospf_costs[] = "routing ospf interface add interface=\"$ppp_client_name\" network-type=point-to-point cost={$subnets[$s]['cost']}";
                     $ppp_clients[] = "interface {$vpn_protocols[$g_vpn]}-client add connect-to=\"{$subnets[$s]['pub']}\" name=\"$ppp_client_name\" user=\"$g_lan-{$subnets[$i]['name']}\" password=\"{$subnets[$i]['psw']}\" profile=default-encryption keepalive-timeout=$ppp_timeout disabled=no";
                 }
                 else if( $is_server )
                 {
                     $ppp_server_name = "$g_lan-$g_vpn-Server-{$subnets[$s]['name']}";
-                    $ospf_costs[] = "routing ospf interface add interface=\"$ppp_server_name\" network-type=point-to-point cost={$subnets[$s]['cost']}";
+                    if( $v7 )
+                        $ospf_costs[] = "routing ospf interface-template add interfaces=\"$ppp_server_name\" area=\"$g_lan\" type=ptp cost={$subnets[$s]['cost']}";
+                    else
+                        $ospf_costs[] = "routing ospf interface add interface=\"$ppp_server_name\" network-type=point-to-point cost={$subnets[$s]['cost']}";
                     $ppp_users[] = "ppp secret add name=\"$g_lan-{$subnets[$s]['name']}\" password=\"{$subnets[$s]['psw']}\" profile=default-encryption local-address={$subnets[$i]['addr_vpn']} remote-address={$subnets[$s]['addr_vpn']}";
                     $ppp_servers[] = "interface {$vpn_protocols[$g_vpn]}-server add name=\"$ppp_server_name\" user=\"$g_lan-{$subnets[$s]['name']}\"";
                 }
