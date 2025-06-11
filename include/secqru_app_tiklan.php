@@ -441,6 +441,7 @@ class secqru_app_tiklan
                         $html->put_option( $temp, $temp, $subnets[$i]['ros'] == $temp );
                 }
                 $html->close();
+                $html->put_submit( 'save', 'v' );
                 $html->add( ' — RouterOS version', 1 );
             }
             $html->close();
