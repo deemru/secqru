@@ -150,8 +150,7 @@ class secqru_worker
     public function init()
     {
         // URL
-        $this->url = substr( $_SERVER['REQUEST_URI'], strlen( SECQRU_ROOT ) );
-        $this->url = explode( '/', $this->url );
+        $this->url = explode( '/', substr( $_SERVER['REQUEST_URI'], strlen( SECQRU_ROOT ) ) );
 
         // APP
         $app = $this->url[0];
