@@ -572,7 +572,8 @@ class secqru_app_tiklan
         if( sizeof( $ppp_users ) || sizeof( $ppp_servers ) )
         {
             $config[] = "# PPP Server ({$subnets[$i]['name']})";
-            $config[] = "interface {$vpn_protocols[$g_vpn]}-server server set enabled=yes keepalive-timeout=$ppp_timeout";
+            if( !$g_sel || ( $g_sel && $g_sel == $i ) )
+                $config[] = "interface {$vpn_protocols[$g_vpn]}-server server set enabled=yes keepalive-timeout=$ppp_timeout";
             $config = array_merge( $config, $ppp_users );
             $config =  array_merge( $config, $ppp_servers );
             $config[] = '';
