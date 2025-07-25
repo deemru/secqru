@@ -472,7 +472,7 @@ class secqru_app_tiklan
             $config[] = "# Bridge ({$subnets[$i]['name']})";
             $config[] = "interface bridge add name=\"$g_lan\" comment=\"$g_lan\" protocol-mode=none mtu=1500";
             $config[] = "ip address add address={$subnets[$i]['addr_gw']}/$g_cidr interface=\"$g_lan\"";
-            $config[] = "ip route add dst-address={$subnets[0]['addr_subnet']}/24 type=unreachable";
+            $config[] = "ip route add dst-address={$subnets[0]['addr_subnet']}/24 " . ( $v7 ? 'blackhole' : 'type=blackhole' );
             $config[] = '';
 
             // OSPF Routes
