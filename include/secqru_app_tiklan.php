@@ -159,11 +159,11 @@ class secqru_app_tiklan
             $subnets[$i]['psw'] = $g_psw_prefix . substr( sha1( $g_psw . $subnets[$i]['name'] ), -8 );
 
             // SUBNET ROUTEROS VERSION
-            $subnets[$i]['ros'] = $this->w->get_dns( "ros$i:routeros version $i", 'v6' );
+            $subnets[$i]['ros'] = $this->w->get_dns( "ros$i:routeros version $i", 'v7' );
             $ros_versions = array( 'v6', 'v7' );
             if( !in_array( $subnets[$i]['ros'], $ros_versions ) )
             {
-                $subnets[$i]['ros'] = 'v6';
+                $subnets[$i]['ros'] = 'v7';
                 $this->w->ezlog( 'default', $subnets[$i]['name'], $subnets[$i]['ros'], 1 );
             }
         }
